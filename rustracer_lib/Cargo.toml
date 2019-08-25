@@ -1,0 +1,11 @@
+[package]                                                                       
+name = "rustracer_lib"                                                                  
+version = "0.1.0"                                                               
+authors = ["Stefan Andreas Baur <stefan_andreas.baur@daimler.com>"]             
+edition = "2018"                                                                
+                                                                                
+                                                                                
+[dependencies]
+rand = "0.7.0"
+image = "0.12"                                                          
+rayon = "1.1.0"
