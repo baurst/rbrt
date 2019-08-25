@@ -1,6 +1,7 @@
 extern crate clap;
 extern crate rustracer_lib;
 
+use rustracer_lib::vec3::Vec3;
 use clap::{App, Arg};
 use std::fs::OpenOptions;
 
@@ -31,7 +32,7 @@ fn main() {
         .arg(
             Arg::with_name("samples")
                 .help("number of samples to draw per pixel")
-                .default_value("1")
+                .default_value("5")
                 .index(4),
         );
     let matches = app.get_matches();
@@ -54,13 +55,13 @@ fn main() {
         .expect("Please provide valid number of samples per pixel!");
 
     let sphere = rustracer_lib::Sphere {
-        center: rustracer_lib::Vec3 {
+        center: Vec3 {
             x: 0.0,
             y: 1.0,
             z: -5.0,
         },
         radius: 1.0,
-        color: rustracer_lib::Vec3 {
+        color: Vec3 {
             x: 0.4,
             y: 1.0,
             z: 0.4,
@@ -68,13 +69,13 @@ fn main() {
     };
 
     let sphere2 = rustracer_lib::Sphere {
-        center: rustracer_lib::Vec3 {
+        center: Vec3 {
             x: 1.0,
             y: 0.0,
             z: -5.0,
         },
         radius: 1.5,
-        color: rustracer_lib::Vec3 {
+        color: Vec3 {
             x: 0.9,
             y: 0.0,
             z: 0.0,
@@ -82,13 +83,13 @@ fn main() {
     };
 
     let sphere3 = rustracer_lib::Sphere {
-        center: rustracer_lib::Vec3 {
+        center: Vec3 {
             x: -1.0,
             y: -1.0,
             z: -4.0,
         },
         radius: 0.5,
-        color: rustracer_lib::Vec3 {
+        color: Vec3 {
             x: 0.2,
             y: 0.2,
             z: 0.9,
@@ -96,12 +97,12 @@ fn main() {
     };
 
     let light = rustracer_lib::Light {
-        position: rustracer_lib::Vec3 {
+        position: Vec3 {
             x: 0.0,
             y: 0.0,
             z: -5.0,
         },
-        color: rustracer_lib::Vec3 {
+        color: Vec3 {
             x: 0.4,
             y: 1.0,
             z: 0.4,

@@ -2,109 +2,13 @@ extern crate image;
 extern crate rand;
 extern crate rayon;
 
+pub mod vec3;
+use vec3::Vec3;
+
 use image::{GenericImage, Pixel, Pixels, Rgb};
 use std::cmp::Ordering;
-use std::ops::{Add, Mul, Neg, Sub};
 
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
-
-#[derive(Copy, Clone, Debug)]
-pub struct Vec3 {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
-}
-
-impl Sub for Vec3 {
-    type Output = Vec3;
-
-    fn sub(self, other: Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x - other.x,
-            y: self.y - other.y,
-            z: self.z - other.z,
-        }
-    }
-}
-impl Add for Vec3 {
-    type Output = Vec3;
-
-    fn add(self, other: Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x + other.x,
-            y: self.y + other.y,
-            z: self.z + other.z,
-        }
-    }
-}
-
-impl Mul<Vec3> for Vec3 {
-    type Output = Vec3;
-
-    fn mul(self, other: Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x * other.x,
-            y: self.y * other.y,
-            z: self.z * other.z,
-        }
-    }
-}
-
-impl Mul<Vec3> for f64 {
-    type Output = Vec3;
-
-    fn mul(self, other: Vec3) -> Vec3 {
-        Vec3 {
-            x: self * other.x,
-            y: self * other.y,
-            z: self * other.z,
-        }
-    }
-}
-
-impl Mul<f64> for Vec3 {
-    type Output = Vec3;
-
-    fn mul(self, other: f64) -> Vec3 {
-        Vec3 {
-            x: self.x * other,
-            y: self.y * other,
-            z: self.z * other,
-        }
-    }
-}
-
-impl Vec3 {
-    pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
-        Vec3 { x: x, y: y, z: z }
-    }
-    pub fn length(&self) -> f64 {
-        return (self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
-    }
-    pub fn sum(&self) -> f64 {
-        return self.x + self.y + self.z;
-    }
-    pub fn normalize(&self) -> Vec3 {
-        let len = self.length();
-        let vec = Vec3 {
-            x: self.x / len,
-            y: self.y / len,
-            z: self.z / len,
-        };
-        return vec;
-    }
-    fn cross_product(&self, other: &Vec3) -> Vec3 {
-        Vec3::new(
-            self.y * other.z - self.z * other.y,
-            self.z * other.x - self.x * other.z,
-            self.x * other.y - self.y * other.x,
-        )
-    }
-
-    pub fn dot(&self, other: &Vec3) -> f64 {
-        return (*self * *other).sum();
-    }
-}
 
 pub struct Ray {
     pub origin: Vec3,
@@ -171,11 +75,11 @@ impl Camera {
     }
 
     pub fn get_ray_through_pixel_center(&self, img_row_pix: u32, img_col_pix: u32) -> Ray {
-        let img_col_center_offset = img_col_pix as i32 - (self.img_width_pix / 2) as i32 ;
-        let img_row_center_offset = img_row_pix as i32 -  (self.img_height_pix / 2) as i32;
+        let img_col_center_offset = img_col_pix as f64 - (self.img_width_pix / 2) as f64 ;
+        let img_row_center_offset = img_row_pix as f64 -  (self.img_height_pix / 2) as f64;
 
-        let img_col_center_offset_mm = img_col_center_offset as f64 * self.mm_per_pix_hor;
-        let img_row_center_offset_mm = img_row_center_offset as f64 * self.mm_per_pix_vert;
+        let img_col_center_offset_mm = (img_col_center_offset + rand::random::<f64>() - 0.5) * self.mm_per_pix_hor;
+        let img_row_center_offset_mm = (img_row_center_offset + rand::random::<f64>() - 0.5) * self.mm_per_pix_vert;
 
         let ray_target_in_img_plane = self.img_center_point
             + 0.001 * img_col_center_offset_mm * self.right
@@ -263,23 +167,29 @@ pub fn render_scene(
             let col: Vec<Vec3> = (0..height)
                 .into_par_iter()
                 .map(|row_idx| {
-                    let mut color_vector: Vec3 = Vec3 {
+
+                    let bg_color = Vec3 {
                         x: 0.5,
                         y: 0.5,
                         z: 1.0 - row_idx as f64 / height as f64,
                     };
-                    let ray = cam.get_ray_through_pixel_center(row_idx, col_idx);
+
+                    let mut color = Vec3::new(0.0, 0.0, 0.0);
                     for _s in 0..num_samples {
-                        for sphere in &scene.spheres {
+                    let ray = cam.get_ray_through_pixel_center(row_idx, col_idx);
+                        for sphere in &scene.spheres { //todo: fix logical error here!
                             if sphere.interset_w_ray(&ray)
                             {
-                                color_vector = sphere.color;
+                                color = sphere.color;
                                 break;
+                            }
+                            else{
+                                color = bg_color;
                             }
                         }
                     }
-                    color_vector = color_vector * (1.0 / num_samples as f64);
-                    color_vector
+                    //color = color * (1.0 / num_samples as f64);
+                    color
                 })
                 .collect();
             col
