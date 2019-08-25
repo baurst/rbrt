@@ -56,7 +56,7 @@ fn main() {
     let sphere = rustracer_lib::Sphere {
         center: rustracer_lib::Vec3 {
             x: 0.0,
-            y: 0.0,
+            y: 1.0,
             z: -5.0,
         },
         radius: 1.0,
@@ -70,7 +70,7 @@ fn main() {
     let sphere2 = rustracer_lib::Sphere {
         center: rustracer_lib::Vec3 {
             x: 1.0,
-            y: 1.0,
+            y: 0.0,
             z: -5.0,
         },
         radius: 1.5,
@@ -83,9 +83,9 @@ fn main() {
 
     let sphere3 = rustracer_lib::Sphere {
         center: rustracer_lib::Vec3 {
-            x: -0.5,
-            y: 2.0,
-            z: -5.0,
+            x: -1.0,
+            y: -1.0,
+            z: -4.0,
         },
         radius: 0.5,
         color: rustracer_lib::Vec3 {

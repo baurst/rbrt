@@ -171,8 +171,8 @@ impl Camera {
     }
 
     pub fn get_ray_through_pixel_center(&self, img_row_pix: u32, img_col_pix: u32) -> Ray {
-        let img_col_center_offset = (self.img_width_pix / 2) as i32 - img_col_pix as i32;
-        let img_row_center_offset = (self.img_height_pix / 2) as i32  - img_row_pix as i32;
+        let img_col_center_offset = img_col_pix as i32 - (self.img_width_pix / 2) as i32 ;
+        let img_row_center_offset = img_row_pix as i32 -  (self.img_height_pix / 2) as i32;
 
         let img_col_center_offset_mm = img_col_center_offset as f64 * self.mm_per_pix_hor;
         let img_row_center_offset_mm = img_row_center_offset as f64 * self.mm_per_pix_vert;
@@ -259,14 +259,14 @@ pub fn render_scene(
 
     let hdr_img: Vec<Vec<Vec3>> = (0..width)
         .into_par_iter()
-        .map(|row_idx| {
+        .map(|col_idx| {
             let col: Vec<Vec3> = (0..height)
                 .into_par_iter()
-                .map(|col_idx| {
+                .map(|row_idx| {
                     let mut color_vector: Vec3 = Vec3 {
-                        x: 0.0,
-                        y: 0.0,
-                        z: 0.0,
+                        x: 0.5,
+                        y: 0.5,
+                        z: 1.0 - row_idx as f64 / height as f64,
                     };
                     let ray = cam.get_ray_through_pixel_center(row_idx, col_idx);
                     for _s in 0..num_samples {
