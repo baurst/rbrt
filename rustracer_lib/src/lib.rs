@@ -5,7 +5,7 @@ extern crate rayon;
 pub mod vec3;
 use vec3::Vec3;
 
-use image::{GenericImage, Pixel, Pixels, Rgb};
+use image::{Rgb};
 use std::cmp::Ordering;
 
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
@@ -108,13 +108,13 @@ impl Sphere {
     /// insert ray for p into sphere equation, then solve quadratic equation for t
     /// (o+td-c)(o+td-c)=r^2
     /// t1/2 = (-B +- sqrt(B^2 - 4AC))/(2A)
-    pub fn interset_w_ray(&self, ray: &Ray) -> bool {
-        let A = ray.direction.dot(&ray.direction);
+    pub fn interset_w_ray(&self, ray: &Ray) -> f64 {
+        let a = ray.direction.dot(&ray.direction);
         let l = ray.origin - self.center;
-        let B = (ray.direction * 2.0).dot(&l);
-        let C = l.dot(&l) - self.radius.powf(2.0);
+        let b = (ray.direction * 2.0).dot(&l);
+        let c = l.dot(&l) - self.radius.powf(2.0);
 
-        let sol = B.powf(2.0) - 4.0 * A * C;
+        let sol = b.powf(2.0) - 4.0 * a * c;
 
         let num_hits = match sol.partial_cmp(&0.0).expect("Encountered NAN") {
             Ordering::Less => 0,
@@ -122,7 +122,13 @@ impl Sphere {
             Ordering::Equal => 1,
         };
 
-        return num_hits > 0;
+        if num_hits == 0
+        {
+            return -1.0;
+        }
+        else{
+            return (-b - sol.sqrt())/(2.0*a); 
+        }
     }
 }
 
@@ -178,7 +184,7 @@ pub fn render_scene(
                     for _s in 0..num_samples {
                     let ray = cam.get_ray_through_pixel_center(row_idx, col_idx);
                         for sphere in &scene.spheres { //todo: fix logical error here!
-                            if sphere.interset_w_ray(&ray)
+                            if sphere.interset_w_ray(&ray) > 0.0
                             {
                                 color = sphere.color;
                                 break;

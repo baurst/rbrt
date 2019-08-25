@@ -3,7 +3,6 @@ extern crate rustracer_lib;
 
 use rustracer_lib::vec3::Vec3;
 use clap::{App, Arg};
-use std::fs::OpenOptions;
 
 fn main() {
     let app = App::new("rustracer")
