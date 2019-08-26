@@ -13,10 +13,12 @@ use std::cmp::Ordering;
 
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
+#[derive(Copy, Clone, Debug)]
 pub struct HitInformation {
     pub hit_point: Vec3,
     pub hit_normal: Vec3,
     pub hit_color: Vec3,
+    pub dist_from_cam: f64,
 }
 impl HitInformation {
     pub fn zero() -> HitInformation {
@@ -24,6 +26,7 @@ impl HitInformation {
             hit_point: Vec3::new(0.0, 0.0, 0.0),
             hit_normal: Vec3::new(0.0, 0.0, 0.0),
             hit_color: Vec3::new(0.0, 0.0, 0.0),
+            dist_from_cam: std::f64::MAX,
         }
     }
 }
@@ -81,6 +84,7 @@ impl Sphere {
             hit_info.hit_normal = hit_normal;
             hit_info.hit_point = hit_point;
             hit_info.hit_color = self.color;
+            hit_info.dist_from_cam = hit_point.length();
             return true;
         }
     }
@@ -136,18 +140,26 @@ pub fn render_scene(
                     let mut color = Vec3::new(0.0, 0.0, 0.0);
                     for _s in 0..num_samples {
                         let ray = cam.get_ray_through_pixel(row_idx, col_idx);
+                        let mut hit_info = HitInformation::zero();
+                        let mut closest_hit_info = HitInformation::zero();
                         for sphere in &scene.spheres {
-                            //todo: fix logical error here!
-                            let mut hit_info = HitInformation::zero();
                             if sphere.intersect_with_ray(&ray, &mut hit_info) {
-                                color = ray.direction.dot(&hit_info.hit_normal.normalize()).powf(2.0) * hit_info.hit_color;
-                                break;
-                            } else {
-                                color = bg_color;
+                                if hit_info.dist_from_cam < closest_hit_info.dist_from_cam {
+                                    closest_hit_info = hit_info
+                                }
                             }
                         }
+                        if closest_hit_info.dist_from_cam < 10000.0 {
+                            color += ray
+                                .direction
+                                .dot(&closest_hit_info.hit_normal.normalize())
+                                .powf(2.0)
+                                * closest_hit_info.hit_color;
+                        } else {
+                            color += bg_color;
+                        }
                     }
-                    //color = color * (1.0 / num_samples as f64);
+                    color = color * (1.0 / num_samples as f64);
                     color
                 })
                 .collect();
