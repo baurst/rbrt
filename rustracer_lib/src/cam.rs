@@ -34,7 +34,7 @@ impl Camera {
 
         let img_width_mm = 60.0;
         let mm_per_pix_hor = img_width_mm / img_width_pix as f64;
-        
+
         let img_height_mm = img_height_pix as f64 * mm_per_pix_hor;
         let mm_per_pix_vert = img_height_mm / img_height_pix as f64;
 
@@ -61,11 +61,13 @@ impl Camera {
     }
 
     pub fn get_ray_through_pixel_center(&self, img_row_pix: u32, img_col_pix: u32) -> Ray {
-        let img_col_center_offset = img_col_pix as f64 - (self.img_width_pix / 2) as f64 ;
-        let img_row_center_offset = img_row_pix as f64 -  (self.img_height_pix / 2) as f64;
+        let img_col_center_offset = img_col_pix as f64 - (self.img_width_pix / 2) as f64;
+        let img_row_center_offset = img_row_pix as f64 - (self.img_height_pix / 2) as f64;
 
-        let img_col_center_offset_mm = (img_col_center_offset + rand::random::<f64>() - 0.5) * self.mm_per_pix_hor;
-        let img_row_center_offset_mm = (img_row_center_offset + rand::random::<f64>() - 0.5) * self.mm_per_pix_vert;
+        let img_col_center_offset_mm =
+            (img_col_center_offset + rand::random::<f64>() - 0.5) * self.mm_per_pix_hor;
+        let img_row_center_offset_mm =
+            (img_row_center_offset + rand::random::<f64>() - 0.5) * self.mm_per_pix_vert;
 
         let ray_target_in_img_plane = self.img_center_point
             + 0.001 * img_col_center_offset_mm * self.right

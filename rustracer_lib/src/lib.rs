@@ -8,14 +8,39 @@ use vec3::Vec3;
 pub mod cam;
 use cam::Camera;
 
-use image::{Rgb};
+use image::Rgb;
 use std::cmp::Ordering;
 
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
+pub struct HitInformation {
+    pub hit_point: Vec3,
+    pub hit_normal: Vec3,
+    pub hit_color: Vec3,
+}
+impl HitInformation {
+    pub fn zero() -> HitInformation {
+        HitInformation {
+            hit_point: Vec3::new(0.0, 0.0, 0.0),
+            hit_normal: Vec3::new(0.0, 0.0, 0.0),
+            hit_color: Vec3::new(0.0, 0.0, 0.0),
+        }
+    }
+}
+
+trait Intersectable {
+    fn intersect_with_ray(&self, ray: &Ray, hit_info: &mut HitInformation) -> bool;
+}
+
 pub struct Ray {
     pub origin: Vec3,
     pub direction: Vec3,
+}
+
+impl Ray {
+    pub fn point_at(&self, ray_param: f64) -> Vec3 {
+        return self.origin + ray_param * self.direction;
+    }
 }
 
 pub struct Sphere {
@@ -32,7 +57,8 @@ impl Sphere {
     /// insert ray for p into sphere equation, then solve quadratic equation for t
     /// (o+td-c)(o+td-c)=r^2
     /// t1/2 = (-B +- sqrt(B^2 - 4AC))/(2A)
-    pub fn interset_w_ray(&self, ray: &Ray) -> f64 {
+    ///
+    pub fn intersect_with_ray(&self, ray: &Ray, hit_info: &mut HitInformation) -> bool {
         let a = ray.direction.dot(&ray.direction);
         let l = ray.origin - self.center;
         let b = (ray.direction * 2.0).dot(&l);
@@ -46,12 +72,16 @@ impl Sphere {
             Ordering::Equal => 1,
         };
 
-        if num_hits == 0
-        {
-            return -1.0;
-        }
-        else{
-            return (-b - sol.sqrt())/(2.0*a); 
+        if num_hits == 0 {
+            return false;
+        } else {
+            let ray_param = (-b - sol.sqrt()) / (2.0 * a);
+            let hit_point = ray.point_at(ray_param);
+            let hit_normal = hit_point - self.center;
+            hit_info.hit_normal = hit_normal;
+            hit_info.hit_point = hit_point;
+            hit_info.hit_color = self.color;
+            return true;
         }
     }
 }
@@ -97,7 +127,6 @@ pub fn render_scene(
             let col: Vec<Vec3> = (0..height)
                 .into_par_iter()
                 .map(|row_idx| {
-
                     let bg_color = Vec3 {
                         x: 0.5,
                         y: 0.5,
@@ -106,14 +135,15 @@ pub fn render_scene(
 
                     let mut color = Vec3::new(0.0, 0.0, 0.0);
                     for _s in 0..num_samples {
-                    let ray = cam.get_ray_through_pixel_center(row_idx, col_idx);
-                        for sphere in &scene.spheres { //todo: fix logical error here!
-                            if sphere.interset_w_ray(&ray) > 0.0
-                            {
-                                color = sphere.color;
+                        let ray = cam.get_ray_through_pixel_center(row_idx, col_idx);
+                        for sphere in &scene.spheres {
+                            //todo: fix logical error here!
+                            let mut hit_info = HitInformation::zero();
+                            if sphere.intersect_with_ray(&ray, &mut hit_info) {
+                                color = ray.direction.dot(&hit_info.hit_normal.normalize()).powf(2.0) * hit_info.hit_color;
+
                                 break;
-                            }
-                            else{
+                            } else {
                                 color = bg_color;
                             }
                         }
