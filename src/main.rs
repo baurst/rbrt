@@ -8,31 +8,34 @@ fn main() {
     let app = App::new("rustracer")
         .version("0.1")
         .author("baurst")
-        .about("lighweight raytracer written in rust")
+        .about("a lighweight raytracer written in rust")
         .arg(
             Arg::with_name("target_file")
+                .short("t")
+                .long("target_file")
                 .help("file that will be created witht he rendered output")
-                .default_value("dbg_out.png")
-                //.required(true)
-                .index(1),
+                .default_value("dbg_out.png"),
         )
         .arg(
             Arg::with_name("height")
+                .short("h")
+                .long("height")
                 .help("target image resolution height")
-                .default_value("600")
-                .index(2),
+                .default_value("600"),
         )
         .arg(
             Arg::with_name("width")
+                .short("w")
+                .long("width")
                 .help("target image resolution width")
-                .default_value("800")
-                .index(3),
+                .default_value("800"),
         )
         .arg(
             Arg::with_name("samples")
+                .short("s")
+                .long("samples")
                 .help("number of samples to draw per pixel")
-                .default_value("5")
-                .index(4),
+                .default_value("5"),
         );
     let matches = app.get_matches();
 

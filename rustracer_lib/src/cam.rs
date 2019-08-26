@@ -60,7 +60,7 @@ impl Camera {
         }
     }
 
-    pub fn get_ray_through_pixel_center(&self, img_row_pix: u32, img_col_pix: u32) -> Ray {
+    pub fn get_ray_through_pixel(&self, img_row_pix: u32, img_col_pix: u32) -> Ray {
         let img_col_center_offset = img_col_pix as f64 - (self.img_width_pix / 2) as f64;
         let img_row_center_offset = img_row_pix as f64 - (self.img_height_pix / 2) as f64;
 

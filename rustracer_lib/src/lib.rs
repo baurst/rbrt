@@ -135,13 +135,12 @@ pub fn render_scene(
 
                     let mut color = Vec3::new(0.0, 0.0, 0.0);
                     for _s in 0..num_samples {
-                        let ray = cam.get_ray_through_pixel_center(row_idx, col_idx);
+                        let ray = cam.get_ray_through_pixel(row_idx, col_idx);
                         for sphere in &scene.spheres {
                             //todo: fix logical error here!
                             let mut hit_info = HitInformation::zero();
                             if sphere.intersect_with_ray(&ray, &mut hit_info) {
                                 color = ray.direction.dot(&hit_info.hit_normal.normalize()).powf(2.0) * hit_info.hit_color;
-
                                 break;
                             } else {
                                 color = bg_color;
