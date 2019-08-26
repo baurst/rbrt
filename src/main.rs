@@ -98,6 +98,20 @@ fn main() {
         },
     };
 
+    let earth = rustracer_lib::Sphere {
+        center: Vec3 {
+            x: 0.0,
+            y: -33.0,
+            z: -8.0,
+        },
+        radius: 30.0,
+        color: Vec3 {
+            x: 0.1,
+            y: 1.0,
+            z: 0.4,
+        },
+    };
+
     let light = rustracer_lib::Light {
         position: Vec3 {
             x: 0.0,
@@ -113,7 +127,7 @@ fn main() {
 
     let lights = vec![light];
 
-    let spheres = vec![sphere, sphere2, sphere3];
+    let spheres = vec![sphere, sphere2, sphere3, earth];
 
     let scene = rustracer_lib::Scene {
         spheres: spheres,

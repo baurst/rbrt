@@ -149,11 +149,11 @@ pub fn render_scene(
                                 }
                             }
                         }
-                        if closest_hit_info.dist_from_cam < 10000.0 {
+                        if closest_hit_info.dist_from_cam < std::f64::MAX {
                             color += ray
                                 .direction
                                 .dot(&closest_hit_info.hit_normal.normalize())
-                                .powf(2.0)
+                                .abs()
                                 * closest_hit_info.hit_color;
                         } else {
                             color += bg_color;
