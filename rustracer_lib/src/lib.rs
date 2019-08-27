@@ -39,7 +39,6 @@ pub trait Intersectable {
     fn intersect_with_ray(&self, ray: &Ray, hit_info: &mut HitInformation) -> bool;
 }
 
-
 pub struct Ray {
     pub origin: Vec3,
     pub direction: Vec3,
