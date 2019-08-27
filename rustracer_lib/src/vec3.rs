@@ -39,6 +39,15 @@ impl AddAssign for Vec3 {
         };
     }
 }
+impl AddAssign<&Vec3> for Vec3 {
+    fn add_assign(&mut self, other: &Self) {
+        *self = Self {
+            x: self.x + other.x,
+            y: self.y + other.y,
+            z: self.z + other.z,
+        };
+    }
+}
 
 impl Mul<Vec3> for Vec3 {
     type Output = Vec3;

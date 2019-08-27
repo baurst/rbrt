@@ -103,6 +103,38 @@ pub struct Scene {
     pub spheres: Vec<Sphere>,
     pub lights: Vec<Light>,
 }
+pub fn colorize(
+    cam: &Camera,
+    scene: &Scene,
+    bg_color: &Vec3,
+    row_idx: u32,
+    col_idx: u32,
+    current_depth: u32,
+) -> Vec3 {
+    let max_depth = 10;
+    let mut color = Vec3::new(0.0, 0.0, 0.0);
+    let ray = cam.get_ray_through_pixel(row_idx, col_idx);
+
+    let mut hit_info = HitInformation::zero();
+    let mut closest_hit_info = HitInformation::zero();
+    for sphere in &scene.spheres {
+        if sphere.intersect_with_ray(&ray, &mut hit_info) {
+            if hit_info.dist_from_cam < closest_hit_info.dist_from_cam {
+                closest_hit_info = hit_info
+            }
+        }
+    }
+    if closest_hit_info.dist_from_cam < std::f64::MAX {
+        color += ray
+            .direction
+            .dot(&closest_hit_info.hit_normal.normalize())
+            .abs()
+            * closest_hit_info.hit_color;
+    } else {
+        color += bg_color;
+    }
+    return color;
+}
 
 pub fn render_scene(
     height: u32,
@@ -143,25 +175,7 @@ pub fn render_scene(
 
                     let mut color = Vec3::new(0.0, 0.0, 0.0);
                     for _s in 0..num_samples {
-                        let ray = cam.get_ray_through_pixel(row_idx, col_idx);
-                        let mut hit_info = HitInformation::zero();
-                        let mut closest_hit_info = HitInformation::zero();
-                        for sphere in &scene.spheres {
-                            if sphere.intersect_with_ray(&ray, &mut hit_info) {
-                                if hit_info.dist_from_cam < closest_hit_info.dist_from_cam {
-                                    closest_hit_info = hit_info
-                                }
-                            }
-                        }
-                        if closest_hit_info.dist_from_cam < std::f64::MAX {
-                            color += ray
-                                .direction
-                                .dot(&closest_hit_info.hit_normal.normalize())
-                                .abs()
-                                * closest_hit_info.hit_color;
-                        } else {
-                            color += bg_color;
-                        }
+                        color += colorize(&cam, &scene, &bg_color, row_idx, col_idx, 10)
                     }
                     color = color * (1.0 / num_samples as f64);
                     color
