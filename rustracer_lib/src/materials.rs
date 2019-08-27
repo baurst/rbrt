@@ -3,7 +3,7 @@ use crate::{HitInformation, Ray};
 
 #[derive(Copy, Clone, Debug)]
 pub struct Lambertian {
-    albedo: Vec3,
+    pub albedo: Vec3,
 }
 
 impl Lambertian {

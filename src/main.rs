@@ -2,7 +2,9 @@ extern crate clap;
 extern crate rustracer_lib;
 
 use clap::{App, Arg};
+use rustracer_lib::materials::Lambertian;
 use rustracer_lib::vec3::Vec3;
+use rustracer_lib::{Light, Scene, Sphere};
 
 fn main() {
     let app = App::new("rustracer")
@@ -56,63 +58,71 @@ fn main() {
         .parse::<u32>()
         .expect("Please provide valid number of samples per pixel!");
 
-    let sphere = rustracer_lib::Sphere {
+    let sphere = Sphere {
         center: Vec3 {
             x: 0.0,
             y: 1.0,
             z: -5.0,
         },
         radius: 1.0,
-        color: Vec3 {
-            x: 0.4,
-            y: 1.0,
-            z: 0.4,
+        material: Lambertian {
+            albedo: Vec3 {
+                x: 0.4,
+                y: 1.0,
+                z: 0.4,
+            },
         },
     };
 
-    let sphere2 = rustracer_lib::Sphere {
+    let sphere2 = Sphere {
         center: Vec3 {
             x: 1.0,
             y: 0.0,
             z: -5.0,
         },
         radius: 1.5,
-        color: Vec3 {
-            x: 0.9,
-            y: 0.0,
-            z: 0.0,
+        material: Lambertian {
+            albedo: Vec3 {
+                x: 0.9,
+                y: 0.0,
+                z: 0.0,
+            },
         },
     };
 
-    let sphere3 = rustracer_lib::Sphere {
+    let sphere3 = Sphere {
         center: Vec3 {
             x: -1.0,
             y: -1.0,
             z: -4.0,
         },
         radius: 0.5,
-        color: Vec3 {
-            x: 0.2,
-            y: 0.2,
-            z: 0.9,
+        material: Lambertian {
+            albedo: Vec3 {
+                x: 0.2,
+                y: 0.2,
+                z: 0.9,
+            },
         },
     };
 
-    let earth = rustracer_lib::Sphere {
+    let earth = Sphere {
         center: Vec3 {
             x: 0.0,
             y: -33.0,
             z: -8.0,
         },
         radius: 30.0,
-        color: Vec3 {
-            x: 0.1,
-            y: 1.0,
-            z: 0.4,
+        material: Lambertian {
+            albedo: Vec3 {
+                x: 0.1,
+                y: 1.0,
+                z: 0.4,
+            },
         },
     };
 
-    let light = rustracer_lib::Light {
+    let light = Light {
         position: Vec3 {
             x: 0.0,
             y: 0.0,
@@ -129,7 +139,7 @@ fn main() {
 
     let spheres = vec![sphere, sphere2, sphere3, earth];
 
-    let scene = rustracer_lib::Scene {
+    let scene = Scene {
         spheres: spheres,
         lights: lights,
     };

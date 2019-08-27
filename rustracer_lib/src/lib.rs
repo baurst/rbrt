@@ -9,7 +9,7 @@ pub mod cam;
 use cam::Camera;
 
 pub mod materials;
-use materials::random_point_in_unit_sphere;
+use materials::Lambertian;
 
 use image::Rgb;
 use std::cmp::Ordering;
@@ -52,8 +52,8 @@ impl Ray {
 
 pub struct Sphere {
     pub center: Vec3,
-    pub color: Vec3,
     pub radius: f64,
+    pub material: Lambertian,
 }
 
 impl Sphere {
@@ -87,7 +87,7 @@ impl Sphere {
             let hit_normal = hit_point - self.center;
             hit_info.hit_normal = hit_normal;
             hit_info.hit_point = hit_point;
-            hit_info.hit_color = self.color;
+            hit_info.hit_color = self.material.albedo;
             hit_info.dist_from_cam = hit_point.length();
             return true;
         }
