@@ -8,6 +8,9 @@ use vec3::Vec3;
 pub mod cam;
 use cam::Camera;
 
+pub mod materials;
+use materials::random_point_in_unit_sphere;
+
 use image::Rgb;
 use std::cmp::Ordering;
 
@@ -20,6 +23,7 @@ pub struct HitInformation {
     pub hit_color: Vec3,
     pub dist_from_cam: f64,
 }
+
 impl HitInformation {
     pub fn zero() -> HitInformation {
         HitInformation {
@@ -31,9 +35,10 @@ impl HitInformation {
     }
 }
 
-trait Intersectable {
+pub trait Intersectable {
     fn intersect_with_ray(&self, ray: &Ray, hit_info: &mut HitInformation) -> bool;
 }
+
 
 pub struct Ray {
     pub origin: Vec3,
@@ -61,7 +66,7 @@ impl Sphere {
     /// (o+td-c)(o+td-c)=r^2
     /// t1/2 = (-B +- sqrt(B^2 - 4AC))/(2A)
     ///
-    pub fn intersect_with_ray(&self, ray: &Ray, hit_info: &mut HitInformation) -> bool {
+    fn intersect_with_ray(&self, ray: &Ray, hit_info: &mut HitInformation) -> bool {
         let a = ray.direction.dot(&ray.direction);
         let l = ray.origin - self.center;
         let b = (ray.direction * 2.0).dot(&l);
