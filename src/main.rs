@@ -60,7 +60,7 @@ fn main() {
 
     let sphere = Sphere {
         center: Vec3 {
-            x: 0.0,
+            x: -1.5,
             y: 1.0,
             z: -5.0,
         },
@@ -84,8 +84,8 @@ fn main() {
         material: Lambertian {
             albedo: Vec3 {
                 x: 0.9,
-                y: 0.0,
-                z: 0.0,
+                y: 0.1,
+                z: 0.1,
             },
         },
     };

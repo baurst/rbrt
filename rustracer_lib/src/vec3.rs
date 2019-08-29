@@ -89,6 +89,13 @@ impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
         Vec3 { x: x, y: y, z: z }
     }
+    pub fn zero() -> Vec3 {
+        Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
+    }
     pub fn length(&self) -> f64 {
         return (self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
     }

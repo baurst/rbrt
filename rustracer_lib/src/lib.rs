@@ -20,8 +20,8 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 pub struct HitInformation {
     pub hit_point: Vec3,
     pub hit_normal: Vec3,
-    pub hit_color: Vec3,
-    pub dist_from_cam: f64,
+    pub hit_material: Lambertian,
+    pub dist_from_ray_orig: f64,
 }
 
 impl HitInformation {
@@ -29,8 +29,10 @@ impl HitInformation {
         HitInformation {
             hit_point: Vec3::new(0.0, 0.0, 0.0),
             hit_normal: Vec3::new(0.0, 0.0, 0.0),
-            hit_color: Vec3::new(0.0, 0.0, 0.0),
-            dist_from_cam: std::f64::MAX,
+            hit_material: Lambertian {
+                albedo: Vec3::new(0.0, 0.0, 0.0),
+            },
+            dist_from_ray_orig: std::f64::MAX,
         }
     }
 }
@@ -39,6 +41,7 @@ pub trait Intersectable {
     fn intersect_with_ray(&self, ray: &Ray, hit_info: &mut HitInformation) -> bool;
 }
 
+#[derive(Copy, Clone, Debug)]
 pub struct Ray {
     pub origin: Vec3,
     pub direction: Vec3,
@@ -47,6 +50,12 @@ pub struct Ray {
 impl Ray {
     pub fn point_at(&self, ray_param: f64) -> Vec3 {
         return self.origin + ray_param * self.direction;
+    }
+    pub fn zero() -> Ray {
+        Ray {
+            origin: Vec3::zero(),
+            direction: Vec3::zero(),
+        }
     }
 }
 
@@ -87,8 +96,8 @@ impl Sphere {
             let hit_normal = hit_point - self.center;
             hit_info.hit_normal = hit_normal;
             hit_info.hit_point = hit_point;
-            hit_info.hit_color = self.material.albedo;
-            hit_info.dist_from_cam = hit_point.length();
+            hit_info.hit_material = self.material;
+            hit_info.dist_from_ray_orig = hit_point.length();
             return true;
         }
     }
@@ -103,37 +112,67 @@ pub struct Scene {
     pub spheres: Vec<Sphere>,
     pub lights: Vec<Light>,
 }
-pub fn colorize(
-    cam: &Camera,
-    scene: &Scene,
-    bg_color: &Vec3,
-    row_idx: u32,
-    col_idx: u32,
-    current_depth: u32,
-) -> Vec3 {
-    let max_depth = 10;
-    let mut color = Vec3::new(0.0, 0.0, 0.0);
-    let ray = cam.get_ray_through_pixel(row_idx, col_idx);
 
-    let mut hit_info = HitInformation::zero();
-    let mut closest_hit_info = HitInformation::zero();
-    for sphere in &scene.spheres {
-        if sphere.intersect_with_ray(&ray, &mut hit_info) {
-            if hit_info.dist_from_cam < closest_hit_info.dist_from_cam {
-                closest_hit_info = hit_info
+impl Scene {
+    fn hit(&self, ray: &Ray, min_dist: f64, hit_info: &mut HitInformation) -> bool {
+        let mut hit_anything = false;
+        let mut hit_rec = HitInformation::zero();
+        let mut closest_so_far = std::f64::MAX;
+        for sphere in &self.spheres {
+            if sphere.intersect_with_ray(&ray, &mut hit_rec) {
+                if hit_rec.dist_from_ray_orig < closest_so_far
+                    && hit_rec.dist_from_ray_orig > min_dist
+                {
+                    closest_so_far = hit_rec.dist_from_ray_orig;
+                    hit_info.dist_from_ray_orig = hit_rec.dist_from_ray_orig;
+                    hit_info.hit_material = hit_rec.hit_material;
+                    hit_info.hit_normal = hit_rec.hit_normal;
+                    hit_info.hit_point = hit_rec.hit_point;
+                    hit_anything = true;
+                }
             }
         }
+        hit_anything
     }
-    if closest_hit_info.dist_from_cam < std::f64::MAX {
-        color += ray
-            .direction
-            .dot(&closest_hit_info.hit_normal.normalize())
-            .abs()
-            * closest_hit_info.hit_color;
+}
+
+pub fn colorize(ray: &Ray, scene: &Scene, bg_color: &Vec3, current_depth: u32) -> Vec3 {
+    let min_dist = 0.001;
+    let mut closest_hit_info = HitInformation::zero();
+
+    if scene.hit(&ray, min_dist, &mut closest_hit_info) {
+        let mut scattered_ray = Ray::zero();
+        let mut attentuation = Vec3::zero();
+
+        if current_depth > 0
+            && closest_hit_info.hit_material.scatter(
+                ray,
+                &closest_hit_info,
+                &mut attentuation,
+                &mut scattered_ray,
+            )
+        {
+            // println!("Scattered Ray: {:?}", scattered_ray);
+            let next_color = colorize(&scattered_ray, scene, bg_color, current_depth - 1);
+            // println!("Attentuation {:?}, next color {:?}", attentuation, next_color);
+            return attentuation * next_color;
+        } else {
+            let t = 0.5 * (ray.direction.y + 1.0);
+
+            return t * Vec3::new(1.0, 1.0, 1.0) + (1.0-t) * *bg_color;
+            /*
+            println!("t interm: {}", t);
+            return *bg_color;
+            */
+        }
     } else {
-        color += bg_color;
+        let t = 0.5 * (ray.direction.y + 1.0);
+        return t * Vec3::new(1.0, 1.0, 1.0) + (1.0-t) * *bg_color;
+        /*
+        println!("t final: {}", t);
+        return *bg_color;
+        */
     }
-    return color;
 }
 
 pub fn render_scene(
@@ -168,16 +207,19 @@ pub fn render_scene(
                 .into_par_iter()
                 .map(|row_idx| {
                     let bg_color = Vec3 {
-                        x: 0.5,
-                        y: 0.5,
-                        z: 1.0 - row_idx as f64 / height as f64,
+                        x: 0.8,
+                        y: 0.8,
+                        z: 0.8,
                     };
 
                     let mut color = Vec3::new(0.0, 0.0, 0.0);
                     for _s in 0..num_samples {
-                        color += colorize(&cam, &scene, &bg_color, row_idx, col_idx, 10)
+                        let ray = cam.get_ray_through_pixel(row_idx, col_idx);
+
+                        color += colorize(&ray, &scene, &bg_color, 3);
                     }
                     color = color * (1.0 / num_samples as f64);
+                    //println!("{:#?}",color );
                     color
                 })
                 .collect();
@@ -187,9 +229,9 @@ pub fn render_scene(
 
     let mut imgbuf = image::ImageBuffer::new(width, height);
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
-        let r = (hdr_img[x as usize][y as usize].x * 255.0) as u8;
-        let g = (hdr_img[x as usize][y as usize].y * 255.0) as u8;
-        let b = (hdr_img[x as usize][y as usize].z * 255.0) as u8;
+        let r = (hdr_img[x as usize][y as usize].x.sqrt() * 256.0) as u8;
+        let g = (hdr_img[x as usize][y as usize].y.sqrt() * 256.0) as u8;
+        let b = (hdr_img[x as usize][y as usize].z.sqrt() * 256.0) as u8;
         *pixel = image::Rgb([r, g, b]);
     }
     return imgbuf;
