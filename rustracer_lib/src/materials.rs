@@ -1,8 +1,8 @@
 use crate::vec3::Vec3;
 use crate::{HitInformation, Ray};
 
-/*
-pub trait ScatterLight {
+
+pub trait RayScattering {
     fn scatter(
         &self,
         incoming_ray: &Ray,
@@ -11,14 +11,14 @@ pub trait ScatterLight {
         scattered_ray: &mut Ray,
     ) -> bool;
 }
-*/
+
 #[derive(Copy, Clone, Debug)]
 pub struct Lambertian {
     pub albedo: Vec3,
 }
 
-impl Lambertian {
-    pub fn scatter(
+impl RayScattering for Lambertian {
+    fn scatter(
         &self,
         incoming_ray: &Ray,
         hit_info: &HitInformation,
@@ -80,8 +80,8 @@ pub struct Metal {
     albedo: Vec3,
 }
 
-impl Metal {
-    pub fn scatter(
+impl RayScattering for Metal {
+    fn scatter(
         &self,
         incoming_ray: &Ray,
         hit_info: &HitInformation,
@@ -101,8 +101,8 @@ pub struct Dielectric {
     albedo: Vec3,
 }
 
-impl Dielectric {
-    pub fn scatter(
+impl RayScattering for Dielectric {
+    fn scatter(
         &self,
         incoming_ray: &Ray,
         hit_info: &HitInformation,

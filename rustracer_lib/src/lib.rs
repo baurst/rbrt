@@ -9,29 +9,27 @@ pub mod cam;
 use cam::Camera;
 
 pub mod materials;
-use materials::Lambertian;
+use materials::{RayScattering,Lambertian, Dielectric, Metal};
 
 use image::Rgb;
 use std::cmp::Ordering;
 
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
-#[derive(Copy, Clone, Debug)]
-pub struct HitInformation {
+#[derive(Copy, Clone)]
+pub struct HitInformation<'a> {
     pub hit_point: Vec3,
     pub hit_normal: Vec3,
-    pub hit_material: Lambertian,
+    pub hit_material: Option<&'a(RayScattering + 'a)>,
     pub dist_from_ray_orig: f64,
 }
 
-impl HitInformation {
-    pub fn zero() -> HitInformation {
+impl<'a> HitInformation<'a> {
+    pub fn zero() -> HitInformation<'a> {
         HitInformation {
             hit_point: Vec3::new(0.0, 0.0, 0.0),
             hit_normal: Vec3::new(0.0, 0.0, 0.0),
-            hit_material: Lambertian {
-                albedo: Vec3::new(0.0, 0.0, 0.0),
-            },
+            hit_material: None,
             dist_from_ray_orig: std::f64::MAX,
         }
     }
@@ -59,13 +57,19 @@ impl Ray {
     }
 }
 
-pub struct Sphere {
+pub struct Sphere<'a> {
     pub center: Vec3,
     pub radius: f64,
-    pub material: Lambertian,
+    pub material:Box<RayScattering + 'a>,
 }
 
-impl Sphere {
+impl<'a> Sphere<'a> {
+
+    pub fn new(center: Vec3, radius: f64, material: Box<RayScattering+ 'a>) -> Sphere<'a>{
+        let s = Sphere{center: center, radius: radius, material: material};
+        return s;
+    }
+
     ///
     /// Compute intersection of ray and sphere
     /// ray: r(t) = o + td
@@ -96,7 +100,7 @@ impl Sphere {
             let hit_normal = hit_point - self.center;
             hit_info.hit_normal = hit_normal;
             hit_info.hit_point = hit_point;
-            hit_info.hit_material = self.material;
+            hit_info.hit_material = Some(self.material.as_ref());
             hit_info.dist_from_ray_orig = hit_point.length();
             return true;
         }
@@ -145,7 +149,7 @@ pub fn colorize(ray: &Ray, scene: &Scene, bg_color: &Vec3, current_depth: u32) -
         let mut attentuation = Vec3::zero();
 
         if current_depth > 0
-            && closest_hit_info.hit_material.scatter(
+            && closest_hit_info.hit_material.unwrap().scatter(
                 ray,
                 &closest_hit_info,
                 &mut attentuation,
@@ -201,10 +205,10 @@ pub fn render_scene(
     let cam = Camera::new(cam_pos, cam_look_at, cam_up, height, width, focal_len_mm);
 
     let hdr_img: Vec<Vec<Vec3>> = (0..width)
-        .into_par_iter()
+        //.into_par_iter() // TODO: find way to share!
         .map(|col_idx| {
             let col: Vec<Vec3> = (0..height)
-                .into_par_iter()
+                //.into_par_iter() // TODO: find way to share!
                 .map(|row_idx| {
                     let bg_color = Vec3 {
                         x: 0.8,
