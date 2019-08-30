@@ -20,7 +20,7 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 pub struct HitInformation<'a> {
     pub hit_point: Vec3,
     pub hit_normal: Vec3,
-    pub hit_material: Option<&'a(RayScattering + 'a)>,
+    pub hit_material: Option<&'a(dyn RayScattering + 'a)>,
     pub dist_from_ray_orig: f64,
 }
 
@@ -60,12 +60,12 @@ impl Ray {
 pub struct Sphere<'a> {
     pub center: Vec3,
     pub radius: f64,
-    pub material:Box<RayScattering + 'a>,
+    pub material:Box<dyn RayScattering + 'a>,
 }
 
 impl<'a> Sphere<'a> {
 
-    pub fn new(center: Vec3, radius: f64, material: Box<RayScattering+ 'a>) -> Sphere<'a>{
+    pub fn new(center: Vec3, radius: f64, material: Box<dyn RayScattering + 'a>) -> Sphere<'a>{
         let s = Sphere{center: center, radius: radius, material: material};
         return s;
     }
@@ -78,7 +78,8 @@ impl<'a> Sphere<'a> {
     /// (o+td-c)(o+td-c)=r^2
     /// t1/2 = (-B +- sqrt(B^2 - 4AC))/(2A)
     ///
-    fn intersect_with_ray(&self, ray: &Ray, hit_info: &mut HitInformation) -> bool {
+    /// Hitinformation has anonymous lifetime?
+    fn intersect_with_ray(&self, ray: &Ray, hit_info: &mut HitInformation<'a>) -> bool {
         let a = ray.direction.dot(&ray.direction);
         let l = ray.origin - self.center;
         let b = (ray.direction * 2.0).dot(&l);
@@ -100,7 +101,7 @@ impl<'a> Sphere<'a> {
             let hit_normal = hit_point - self.center;
             hit_info.hit_normal = hit_normal;
             hit_info.hit_point = hit_point;
-            hit_info.hit_material = Some(self.material.as_ref());
+            hit_info.hit_material = Some(&*self.material);
             hit_info.dist_from_ray_orig = hit_point.length();
             return true;
         }
@@ -112,12 +113,12 @@ pub struct Light {
     pub color: Vec3,
 }
 
-pub struct Scene {
-    pub spheres: Vec<Sphere>,
+pub struct Scene<'a> {
+    pub spheres: Vec<Sphere<'a>>,
     pub lights: Vec<Light>,
 }
 
-impl Scene {
+impl Scene<'_> {
     fn hit(&self, ray: &Ray, min_dist: f64, hit_info: &mut HitInformation) -> bool {
         let mut hit_anything = false;
         let mut hit_rec = HitInformation::zero();
@@ -205,10 +206,10 @@ pub fn render_scene(
     let cam = Camera::new(cam_pos, cam_look_at, cam_up, height, width, focal_len_mm);
 
     let hdr_img: Vec<Vec<Vec3>> = (0..width)
-        //.into_par_iter() // TODO: find way to share!
+        .into_par_iter() // TODO: find way to share!
         .map(|col_idx| {
             let col: Vec<Vec3> = (0..height)
-                //.into_par_iter() // TODO: find way to share!
+                .into_par_iter() // TODO: find way to share!
                 .map(|row_idx| {
                     let bg_color = Vec3 {
                         x: 0.8,
