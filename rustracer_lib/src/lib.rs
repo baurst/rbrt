@@ -9,7 +9,7 @@ pub mod cam;
 use cam::Camera;
 
 pub mod materials;
-use materials::{RayScattering,Lambertian, Dielectric, Metal};
+use materials::{Dielectric, Lambertian, Metal, RayScattering};
 
 use image::Rgb;
 use std::cmp::Ordering;
@@ -20,7 +20,7 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 pub struct HitInformation<'a> {
     pub hit_point: Vec3,
     pub hit_normal: Vec3,
-    pub hit_material: Option<&'a(dyn RayScattering + 'a)>,
+    pub hit_material: Option<&'a (dyn RayScattering + 'a)>,
     pub dist_from_ray_orig: f64,
 }
 
@@ -57,16 +57,19 @@ impl Ray {
     }
 }
 
-pub struct Sphere<'a> {
+pub struct Sphere<'b> {
     pub center: Vec3,
     pub radius: f64,
-    pub material:Box<dyn RayScattering + 'a>,
+    pub material: Box<dyn RayScattering + 'b>,
 }
 
-impl<'a> Sphere<'a> {
-
-    pub fn new(center: Vec3, radius: f64, material: Box<dyn RayScattering + 'a>) -> Sphere<'a>{
-        let s = Sphere{center: center, radius: radius, material: material};
+impl Sphere {
+    pub fn new(center: Vec3, radius: f64, material: Box<dyn RayScattering + 'a>) -> Sphere<'a> {
+        let s = Sphere {
+            center: center,
+            radius: radius,
+            material: material,
+        };
         return s;
     }
 
@@ -164,7 +167,7 @@ pub fn colorize(ray: &Ray, scene: &Scene, bg_color: &Vec3, current_depth: u32) -
         } else {
             let t = 0.5 * (ray.direction.y + 1.0);
 
-            return t * Vec3::new(1.0, 1.0, 1.0) + (1.0-t) * *bg_color;
+            return t * Vec3::new(1.0, 1.0, 1.0) + (1.0 - t) * *bg_color;
             /*
             println!("t interm: {}", t);
             return *bg_color;
@@ -172,7 +175,7 @@ pub fn colorize(ray: &Ray, scene: &Scene, bg_color: &Vec3, current_depth: u32) -
         }
     } else {
         let t = 0.5 * (ray.direction.y + 1.0);
-        return t * Vec3::new(1.0, 1.0, 1.0) + (1.0-t) * *bg_color;
+        return t * Vec3::new(1.0, 1.0, 1.0) + (1.0 - t) * *bg_color;
         /*
         println!("t final: {}", t);
         return *bg_color;
