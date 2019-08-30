@@ -20,7 +20,7 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 pub struct HitInformation<'a> {
     pub hit_point: Vec3,
     pub hit_normal: Vec3,
-    pub hit_material: Option<&'a(dyn RayScattering + 'a)>,
+    pub hit_material: Option<&'a dyn RayScattering>,
     pub dist_from_ray_orig: f64,
 }
 
@@ -57,16 +57,16 @@ impl Ray {
     }
 }
 
-pub struct Sphere<'a> {
+pub struct Sphere{
     pub center: Vec3,
     pub radius: f64,
-    pub material:Box<dyn RayScattering + 'a>,
+    pub material: Box<dyn RayScattering + Sync>,
 }
 
-impl<'a> Sphere<'a> {
+impl Sphere {
 
-    pub fn new(center: Vec3, radius: f64, material: Box<dyn RayScattering + 'a>) -> Sphere<'a>{
-        let s = Sphere{center: center, radius: radius, material: material};
+    pub fn new<M: RayScattering + Sync + 'static>(center: Vec3, radius: f64, material: M) -> Sphere{
+        let s = Sphere{center: center, radius: radius, material: Box::new(material)};
         return s;
     }
 
@@ -79,7 +79,7 @@ impl<'a> Sphere<'a> {
     /// t1/2 = (-B +- sqrt(B^2 - 4AC))/(2A)
     ///
     /// Hitinformation has anonymous lifetime?
-    fn intersect_with_ray(&self, ray: &Ray, hit_info: &mut HitInformation<'a>) -> bool {
+    fn intersect_with_ray<'a>(&'a self, ray: &Ray, hit_info: &mut HitInformation<'a>) -> bool {
         let a = ray.direction.dot(&ray.direction);
         let l = ray.origin - self.center;
         let b = (ray.direction * 2.0).dot(&l);
@@ -113,13 +113,13 @@ pub struct Light {
     pub color: Vec3,
 }
 
-pub struct Scene<'a> {
-    pub spheres: Vec<Sphere<'a>>,
+pub struct Scene {
+    pub spheres: Vec<Sphere>,
     pub lights: Vec<Light>,
 }
 
-impl Scene<'_> {
-    fn hit(&self, ray: &Ray, min_dist: f64, hit_info: &mut HitInformation) -> bool {
+impl Scene {
+    fn hit<'a>(&'a self, ray: &Ray, min_dist: f64, hit_info: &mut HitInformation<'a>) -> bool {
         let mut hit_anything = false;
         let mut hit_rec = HitInformation::zero();
         let mut closest_so_far = std::f64::MAX;
@@ -201,7 +201,7 @@ pub fn render_scene(
         y: 0.0,
         z: 0.0,
     };
-    let focal_len_mm = 50.0;
+    let focal_len_mm = 35.0;
 
     let cam = Camera::new(cam_pos, cam_look_at, cam_up, height, width, focal_len_mm);
 

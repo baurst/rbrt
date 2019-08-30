@@ -2,7 +2,7 @@ extern crate clap;
 extern crate rustracer_lib;
 
 use clap::{App, Arg};
-use rustracer_lib::materials::Lambertian;
+use rustracer_lib::materials::{Dielectric,Lambertian, Metal};
 use rustracer_lib::vec3::Vec3;
 use rustracer_lib::{Light, Scene, Sphere};
 
@@ -65,13 +65,13 @@ fn main() {
             z: -5.0,
         },
         radius: 1.0,
-        material: Lambertian {
+        material: Box::new(Lambertian {
             albedo: Vec3 {
                 x: 0.4,
                 y: 1.0,
                 z: 0.4,
             },
-        },
+        })
     };
 
     let sphere2 = Sphere {
@@ -81,13 +81,13 @@ fn main() {
             z: -5.0,
         },
         radius: 1.5,
-        material: Lambertian {
+        material:  Box::new(Metal {
             albedo: Vec3 {
                 x: 0.9,
                 y: 0.1,
                 z: 0.1,
             },
-        },
+        })
     };
 
     let sphere3 = Sphere {
@@ -97,13 +97,29 @@ fn main() {
             z: -4.0,
         },
         radius: 0.5,
-        material: Lambertian {
+        material:  Box::new(Lambertian {
             albedo: Vec3 {
                 x: 0.2,
                 y: 0.2,
                 z: 0.9,
             },
+        })
+    };
+
+    let glass_sphere = Sphere {
+        center: Vec3 {
+            x: -1.0,
+            y: -1.0,
+            z: -3.0,
         },
+        radius: 0.4,
+        material:  Box::new(Dielectric {
+            albedo: Vec3 {
+                x: 0.1,
+                y: 0.1,
+                z: 0.1,
+            },
+        })
     };
 
     let earth = Sphere {
@@ -113,13 +129,13 @@ fn main() {
             z: -8.0,
         },
         radius: 30.0,
-        material: Lambertian {
+        material:  Box::new(Lambertian {
             albedo: Vec3 {
                 x: 0.1,
-                y: 1.0,
-                z: 0.4,
+                y: 0.5,
+                z: 0.1,
             },
-        },
+        })
     };
 
     let light = Light {
@@ -137,7 +153,7 @@ fn main() {
 
     let lights = vec![light];
 
-    let spheres = vec![sphere, sphere2, sphere3, earth];
+    let spheres = vec![sphere, sphere2, sphere3, earth, glass_sphere];
 
     let scene = Scene {
         spheres: spheres,
