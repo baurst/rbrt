@@ -1,7 +1,6 @@
 use crate::vec3::Vec3;
 use crate::{HitInformation, Ray};
 
-
 pub trait RayScattering {
     fn scatter(
         &self,

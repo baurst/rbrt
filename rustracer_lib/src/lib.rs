@@ -20,23 +20,25 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 pub struct HitInformation<'a> {
     pub hit_point: Vec3,
     pub hit_normal: Vec3,
-    pub hit_material: Option<&'a dyn RayScattering>,
+    pub hit_material: &'a dyn RayScattering,
     pub dist_from_ray_orig: f64,
 }
 
+/*
 impl<'a> HitInformation<'a> {
     pub fn zero() -> HitInformation<'a> {
         HitInformation {
             hit_point: Vec3::new(0.0, 0.0, 0.0),
             hit_normal: Vec3::new(0.0, 0.0, 0.0),
-            hit_material: None,
+            hit_material: &Lambertian{albedo: Vec3::new(1.0,1.0,1.0)},
             dist_from_ray_orig: std::f64::MAX,
         }
     }
 }
+*/
 
 pub trait Intersectable {
-    fn intersect_with_ray(&self, ray: &Ray, hit_info: &mut HitInformation) -> bool;
+    fn intersect_with_ray(&self, ray: &Ray) -> Option<HitInformation>;
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -64,11 +66,11 @@ pub struct Sphere{
 }
 
 impl Sphere {
-
-    pub fn new<M: RayScattering + Sync + 'static>(center: Vec3, radius: f64, material: M) -> Sphere{
-        let s = Sphere{center: center, radius: radius, material: Box::new(material)};
-        return s;
-    }
+//
+//    pub fn new<M: RayScattering + Sync + 'static>(center: Vec3, radius: f64, material: M) -> Sphere{
+//        let s = Sphere{center: center, radius: radius, material: Box::new(material)};
+//        return s;
+//      }
 
     ///
     /// Compute intersection of ray and sphere
@@ -79,7 +81,7 @@ impl Sphere {
     /// t1/2 = (-B +- sqrt(B^2 - 4AC))/(2A)
     ///
     /// Hitinformation has anonymous lifetime?
-    fn intersect_with_ray<'a>(&'a self, ray: &Ray, hit_info: &mut HitInformation<'a>) -> bool {
+    fn intersect_with_ray<'a>(&'a self, ray: &Ray) -> Option<HitInformation> {
         let a = ray.direction.dot(&ray.direction);
         let l = ray.origin - self.center;
         let b = (ray.direction * 2.0).dot(&l);
@@ -94,16 +96,18 @@ impl Sphere {
         };
 
         if num_hits == 0 {
-            return false;
+            return None;
         } else {
             let ray_param = (-b - sol.sqrt()) / (2.0 * a);
             let hit_point = ray.point_at(ray_param);
             let hit_normal = hit_point - self.center;
-            hit_info.hit_normal = hit_normal;
-            hit_info.hit_point = hit_point;
-            hit_info.hit_material = Some(&*self.material);
-            hit_info.dist_from_ray_orig = hit_point.length();
-            return true;
+            let hit_info = HitInformation{
+            hit_normal : hit_normal,
+            hit_point : hit_point,
+            hit_material : &*self.material,
+            dist_from_ray_orig : hit_point.length()
+            };
+            return Some(hit_info);
         }
     }
 }
@@ -119,38 +123,42 @@ pub struct Scene {
 }
 
 impl Scene {
-    fn hit<'a>(&'a self, ray: &Ray, min_dist: f64, hit_info: &mut HitInformation<'a>) -> bool {
+    fn hit<'a>(&'a self, ray: &Ray, min_dist: f64) -> Option<HitInformation> {
         let mut hit_anything = false;
-        let mut hit_rec = HitInformation::zero();
+        let mut closest_hit_rec = None;
         let mut closest_so_far = std::f64::MAX;
+
+
         for sphere in &self.spheres {
-            if sphere.intersect_with_ray(&ray, &mut hit_rec) {
+            let hit_info_op = sphere.intersect_with_ray(&ray);
+            if hit_info_op.is_some() {
+
+                let hit_rec = hit_info_op.unwrap();
                 if hit_rec.dist_from_ray_orig < closest_so_far
                     && hit_rec.dist_from_ray_orig > min_dist
                 {
                     closest_so_far = hit_rec.dist_from_ray_orig;
-                    hit_info.dist_from_ray_orig = hit_rec.dist_from_ray_orig;
-                    hit_info.hit_material = hit_rec.hit_material;
-                    hit_info.hit_normal = hit_rec.hit_normal;
-                    hit_info.hit_point = hit_rec.hit_point;
-                    hit_anything = true;
+                   closest_hit_rec = Some(hit_rec);
                 }
             }
         }
-        hit_anything
+        return closest_hit_rec
     }
 }
 
 pub fn colorize(ray: &Ray, scene: &Scene, bg_color: &Vec3, current_depth: u32) -> Vec3 {
     let min_dist = 0.001;
-    let mut closest_hit_info = HitInformation::zero();
 
-    if scene.hit(&ray, min_dist, &mut closest_hit_info) {
+    let hit_opt = scene.hit(&ray, min_dist);
+
+    if hit_opt.is_some() {
+
+        let closest_hit_info = hit_opt.unwrap();
         let mut scattered_ray = Ray::zero();
         let mut attentuation = Vec3::zero();
 
         if current_depth > 0
-            && closest_hit_info.hit_material.unwrap().scatter(
+            && closest_hit_info.hit_material.scatter(
                 ray,
                 &closest_hit_info,
                 &mut attentuation,
