@@ -9,7 +9,7 @@ pub mod cam;
 use cam::Camera;
 
 pub mod materials;
-use materials::{RayScattering,Lambertian, Dielectric, Metal};
+use materials::RayScattering;
 
 use image::Rgb;
 use std::cmp::Ordering;
@@ -59,18 +59,18 @@ impl Ray {
     }
 }
 
-pub struct Sphere{
+pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
     pub material: Box<dyn RayScattering + Sync>,
 }
 
 impl Sphere {
-//
-//    pub fn new<M: RayScattering + Sync + 'static>(center: Vec3, radius: f64, material: M) -> Sphere{
-//        let s = Sphere{center: center, radius: radius, material: Box::new(material)};
-//        return s;
-//      }
+    //
+    //    pub fn new<M: RayScattering + Sync + 'static>(center: Vec3, radius: f64, material: M) -> Sphere{
+    //        let s = Sphere{center: center, radius: radius, material: Box::new(material)};
+    //        return s;
+    //      }
 
     ///
     /// Compute intersection of ray and sphere
@@ -101,11 +101,11 @@ impl Sphere {
             let ray_param = (-b - sol.sqrt()) / (2.0 * a);
             let hit_point = ray.point_at(ray_param);
             let hit_normal = hit_point - self.center;
-            let hit_info = HitInformation{
-            hit_normal : hit_normal,
-            hit_point : hit_point,
-            hit_material : &*self.material,
-            dist_from_ray_orig : hit_point.length()
+            let hit_info = HitInformation {
+                hit_normal: hit_normal,
+                hit_point: hit_point,
+                hit_material: &*self.material,
+                dist_from_ray_orig: hit_point.length(),
             };
             return Some(hit_info);
         }
@@ -124,25 +124,22 @@ pub struct Scene {
 
 impl Scene {
     fn hit<'a>(&'a self, ray: &Ray, min_dist: f64) -> Option<HitInformation> {
-        let mut hit_anything = false;
         let mut closest_hit_rec = None;
         let mut closest_so_far = std::f64::MAX;
-
 
         for sphere in &self.spheres {
             let hit_info_op = sphere.intersect_with_ray(&ray);
             if hit_info_op.is_some() {
-
                 let hit_rec = hit_info_op.unwrap();
                 if hit_rec.dist_from_ray_orig < closest_so_far
                     && hit_rec.dist_from_ray_orig > min_dist
                 {
                     closest_so_far = hit_rec.dist_from_ray_orig;
-                   closest_hit_rec = Some(hit_rec);
+                    closest_hit_rec = Some(hit_rec);
                 }
             }
         }
-        return closest_hit_rec
+        return closest_hit_rec;
     }
 }
 
@@ -152,7 +149,6 @@ pub fn colorize(ray: &Ray, scene: &Scene, bg_color: &Vec3, current_depth: u32) -
     let hit_opt = scene.hit(&ray, min_dist);
 
     if hit_opt.is_some() {
-
         let closest_hit_info = hit_opt.unwrap();
         let mut scattered_ray = Ray::zero();
         let mut attentuation = Vec3::zero();
@@ -166,21 +162,20 @@ pub fn colorize(ray: &Ray, scene: &Scene, bg_color: &Vec3, current_depth: u32) -
             )
         {
             // println!("Scattered Ray: {:?}", scattered_ray);
-            let next_color = colorize(&scattered_ray, scene, bg_color, current_depth - 1);
             // println!("Attentuation {:?}, next color {:?}", attentuation, next_color);
-            return attentuation * next_color;
+            return attentuation * colorize(&scattered_ray, scene, bg_color, current_depth - 1);
         } else {
-            let t = 0.5 * (ray.direction.y + 1.0);
+            //let t = 0.5 * (ray.direction.y + 1.0);
 
-            return t * Vec3::new(1.0, 1.0, 1.0) + (1.0-t) * *bg_color;
-            /*
-            println!("t interm: {}", t);
-            return *bg_color;
-            */
+            let t = 0.5 * (ray.direction.y + 1.0);
+            return (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * *bg_color; /*
+                                                                         println!("t interm: {}", t);
+                                                                         return *bg_color;
+                                                                         */
         }
     } else {
         let t = 0.5 * (ray.direction.y + 1.0);
-        return t * Vec3::new(1.0, 1.0, 1.0) + (1.0-t) * *bg_color;
+        return (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * *bg_color;
         /*
         println!("t final: {}", t);
         return *bg_color;
@@ -222,14 +217,14 @@ pub fn render_scene(
                     let bg_color = Vec3 {
                         x: 0.8,
                         y: 0.8,
-                        z: 0.8,
+                        z: 0.9,
                     };
 
                     let mut color = Vec3::new(0.0, 0.0, 0.0);
                     for _s in 0..num_samples {
                         let ray = cam.get_ray_through_pixel(row_idx, col_idx);
 
-                        color += colorize(&ray, &scene, &bg_color, 3);
+                        color += colorize(&ray, &scene, &bg_color, 50);
                     }
                     color = color * (1.0 / num_samples as f64);
                     //println!("{:#?}",color );

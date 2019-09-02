@@ -2,7 +2,7 @@ extern crate clap;
 extern crate rustracer_lib;
 
 use clap::{App, Arg};
-use rustracer_lib::materials::{Dielectric,Lambertian, Metal};
+use rustracer_lib::materials::{Dielectric, Lambertian, Metal};
 use rustracer_lib::vec3::Vec3;
 use rustracer_lib::{Light, Scene, Sphere};
 
@@ -71,7 +71,7 @@ fn main() {
                 y: 1.0,
                 z: 0.4,
             },
-        })
+        }),
     };
 
     let sphere2 = Sphere {
@@ -81,13 +81,14 @@ fn main() {
             z: -5.0,
         },
         radius: 1.5,
-        material:  Box::new(Metal {
+        material: Box::new(Metal {
             albedo: Vec3 {
                 x: 0.9,
                 y: 0.1,
                 z: 0.1,
             },
-        })
+            fuzz: 0.1,
+        }),
     };
 
     let sphere3 = Sphere {
@@ -97,13 +98,13 @@ fn main() {
             z: -4.0,
         },
         radius: 0.5,
-        material:  Box::new(Lambertian {
+        material: Box::new(Lambertian {
             albedo: Vec3 {
                 x: 0.2,
                 y: 0.2,
                 z: 0.9,
             },
-        })
+        }),
     };
 
     let glass_sphere = Sphere {
@@ -113,13 +114,35 @@ fn main() {
             z: -3.0,
         },
         radius: 0.4,
-        material:  Box::new(Dielectric {
-            albedo: Vec3 {
-                x: 0.1,
-                y: 0.1,
-                z: 0.1,
-            },
-        })
+        material: Box::new(Dielectric { ref_idx: 1.4 }),
+    };
+    let glass_sphere2 = Sphere {
+        center: Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: -3.0,
+        },
+        radius: 0.4,
+        material: Box::new(Dielectric { ref_idx: 1.4 }),
+    };
+    let glass_bubble = Sphere {
+        center: Vec3 {
+            x: -1.0,
+            y: -1.0,
+            z: -3.0,
+        },
+        radius: -0.4,
+        material: Box::new(Dielectric { ref_idx: 1.4 }),
+    };
+
+    let diamond = Sphere {
+        center: Vec3 {
+            x: 1.0,
+            y: -1.0,
+            z: -3.0,
+        },
+        radius: 0.4,
+        material: Box::new(Dielectric { ref_idx: 2.0 }),
     };
 
     let earth = Sphere {
@@ -129,13 +152,13 @@ fn main() {
             z: -8.0,
         },
         radius: 30.0,
-        material:  Box::new(Lambertian {
+        material: Box::new(Lambertian {
             albedo: Vec3 {
                 x: 0.1,
                 y: 0.5,
                 z: 0.1,
             },
-        })
+        }),
     };
 
     let light = Light {
@@ -153,7 +176,16 @@ fn main() {
 
     let lights = vec![light];
 
-    let spheres = vec![sphere, sphere2, sphere3, earth, glass_sphere];
+    let spheres = vec![
+        sphere,
+        sphere2,
+        sphere3,
+        earth,
+        glass_sphere,
+        glass_bubble,
+        diamond,
+        glass_sphere2,
+    ];
 
     let scene = Scene {
         spheres: spheres,
