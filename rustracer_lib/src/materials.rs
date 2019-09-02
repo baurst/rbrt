@@ -46,7 +46,7 @@ pub fn random_point_in_unit_sphere() -> Vec3 {
             rand::random::<f64>(),
         );
     }
-    return point.normalize();
+    return point;
 }
 
 pub fn reflect(incoming_ray_dir: &Vec3, normal: &Vec3) -> Vec3 {
@@ -72,12 +72,12 @@ pub fn refract(
 
     let cos_theta = view_unit.dot(&normal_unit);
     let discr = 1.0 - ni_over_nt.powi(2) * (1.0 - cos_theta.powi(2));
-    //println!("discr {}", discr);
     if discr > 0.0 {
         *refracted_ray_dir =
             ni_over_nt * (view_unit - normal_unit * cos_theta) - discr.sqrt() * normal_unit;
         return true;
     }
+    // println!("Glass did not refract! {}", discr);
     return false;
 }
 
@@ -101,7 +101,17 @@ impl RayScattering for Metal {
         .normalize();
         scattered_ray.origin = hit_info.hit_point;
         *attentuation = self.albedo;
-        return scattered_ray.direction.dot(&hit_info.hit_normal) > 0.0;
+        // TODO FIX THIS, why does this sometimes not reflect!?
+        //let reflect = scattered_ray.direction.dot(&hit_info.hit_normal) > 0.0;
+        /*
+        if !reflect{
+            println!("Metal did not reflect ray!");
+        }
+        else{
+            println!("Metal did reflect ray!");
+        }
+        */
+        return true;
     }
 }
 
@@ -148,10 +158,6 @@ impl RayScattering for Dielectric {
             reflect_prob = schlick(cosine, self.ref_idx);
         //println!("Schlick prob {}", reflect_prob);
         } else {
-            *scattered_ray = Ray {
-                origin: hit_info.hit_point,
-                direction: reflected_ray_dir,
-            };
             reflect_prob = 1.0;
         }
         if rand::random::<f64>() < reflect_prob {

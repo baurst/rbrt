@@ -1,3 +1,4 @@
+use std::cmp::PartialEq;
 use std::ops::{Add, AddAssign, Mul, Sub};
 
 #[derive(Copy, Clone, Debug)]
@@ -85,6 +86,12 @@ impl Mul<f64> for Vec3 {
     }
 }
 
+impl PartialEq for Vec3 {
+    fn eq(&self, other: &Vec3) -> bool {
+        self.x == other.x && self.y == other.y && self.z == other.z
+    }
+}
+
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
         Vec3 { x: x, y: y, z: z }
@@ -121,5 +128,53 @@ impl Vec3 {
 
     pub fn dot(&self, other: &Vec3) -> f64 {
         return (*self * *other).sum();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn it_works() {
+        assert_eq!(2 + 2, 4);
+    }
+    #[test]
+    fn test_cross_product() {
+        assert_eq!(
+            Vec3::new(0.0, 0.0, 1.0),
+            Vec3::new(1.0, 0.0, 0.0).cross_product(&Vec3::new(0.0, 1.0, 0.0))
+        );
+    }
+    #[test]
+    fn test_normalize() {
+        assert_eq!(1.0, Vec3::new(5.0, 2.0, 3.0).normalize().length());
+    }
+    #[test]
+    fn test_dot_product() {
+        assert_eq!(
+            Vec3::new(1.0, 2.0, 3.0).dot(&Vec3::new(1.0, 2.0, 3.0)),
+            14.0
+        );
+    }
+    #[test]
+    fn test_mul() {
+        assert_eq!(
+            Vec3::new(1.0, 2.0, 3.0) * Vec3::new(1.0, 2.0, 3.0),
+            Vec3::new(1.0, 4.0, 9.0)
+        );
+    }
+    #[test]
+    fn test_add() {
+        assert_eq!(
+            Vec3::new(1.0, 2.0, 3.0) + Vec3::new(1.0, 2.0, 3.0),
+            Vec3::new(2.0, 4.0, 6.0)
+        );
+    }
+    #[test]
+    fn test_subtract() {
+        assert_eq!(
+            Vec3::new(1.0, 2.0, 3.0) - Vec3::new(1.0, 2.0, 3.0),
+            Vec3::zero()
+        );
     }
 }

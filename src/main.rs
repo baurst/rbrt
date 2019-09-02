@@ -58,113 +58,69 @@ fn main() {
         .parse::<u32>()
         .expect("Please provide valid number of samples per pixel!");
 
-    let sphere = Sphere {
+    let earth = Sphere {
+        center: Vec3 {
+            x: 0.0,
+            y: -1001.0,
+            z: 0.0,
+        },
+        radius: 1000.0,
+        material: Box::new(Lambertian {
+            albedo: Vec3 {
+                x: 0.1,
+                y: 0.9,
+                z: 0.1,
+            },
+        }),
+    };
+
+    let matte_sphere = Sphere {
         center: Vec3 {
             x: -1.5,
-            y: 1.0,
+            y: 2.0,
             z: -5.0,
         },
         radius: 1.0,
         material: Box::new(Lambertian {
             albedo: Vec3 {
                 x: 0.4,
-                y: 1.0,
-                z: 0.4,
+                y: 0.4,
+                z: 0.9,
             },
         }),
     };
 
-    let sphere2 = Sphere {
+    let metal_sphere = Sphere {
         center: Vec3 {
-            x: 1.0,
-            y: 0.0,
+            x: 2.0,
+            y: 1.0,
             z: -5.0,
         },
         radius: 1.5,
         material: Box::new(Metal {
             albedo: Vec3 {
                 x: 0.9,
-                y: 0.1,
-                z: 0.1,
+                y: 0.5,
+                z: 0.5,
             },
-            fuzz: 0.1,
-        }),
-    };
-
-    let sphere3 = Sphere {
-        center: Vec3 {
-            x: -1.0,
-            y: -1.0,
-            z: -4.0,
-        },
-        radius: 0.5,
-        material: Box::new(Lambertian {
-            albedo: Vec3 {
-                x: 0.2,
-                y: 0.2,
-                z: 0.9,
-            },
+            fuzz: 0.05,
         }),
     };
 
     let glass_sphere = Sphere {
         center: Vec3 {
             x: -1.0,
-            y: -1.0,
+            y: 2.0,
             z: -3.0,
         },
         radius: 0.4,
         material: Box::new(Dielectric { ref_idx: 1.4 }),
-    };
-    let glass_sphere2 = Sphere {
-        center: Vec3 {
-            x: 0.0,
-            y: 0.0,
-            z: -3.0,
-        },
-        radius: 0.4,
-        material: Box::new(Dielectric { ref_idx: 1.4 }),
-    };
-    let glass_bubble = Sphere {
-        center: Vec3 {
-            x: -1.0,
-            y: -1.0,
-            z: -3.0,
-        },
-        radius: -0.4,
-        material: Box::new(Dielectric { ref_idx: 1.4 }),
-    };
-
-    let diamond = Sphere {
-        center: Vec3 {
-            x: 1.0,
-            y: -1.0,
-            z: -3.0,
-        },
-        radius: 0.4,
-        material: Box::new(Dielectric { ref_idx: 2.0 }),
-    };
-
-    let earth = Sphere {
-        center: Vec3 {
-            x: 0.0,
-            y: -33.0,
-            z: -8.0,
-        },
-        radius: 30.0,
-        material: Box::new(Lambertian {
-            albedo: Vec3 {
-                x: 0.1,
-                y: 0.5,
-                z: 0.1,
-            },
-        }),
     };
 
     let light = Light {
         position: Vec3 {
-            x: 0.0,
-            y: 0.0,
+            x: 100.0,
+            y: 100.0,
             z: -5.0,
         },
         color: Vec3 {
@@ -176,16 +132,7 @@ fn main() {
 
     let lights = vec![light];
 
-    let spheres = vec![
-        sphere,
-        sphere2,
-        sphere3,
-        earth,
-        glass_sphere,
-        glass_bubble,
-        diamond,
-        glass_sphere2,
-    ];
+    let spheres = vec![matte_sphere, metal_sphere, earth, glass_sphere];
 
     let scene = Scene {
         spheres: spheres,

@@ -24,19 +24,6 @@ pub struct HitInformation<'a> {
     pub dist_from_ray_orig: f64,
 }
 
-/*
-impl<'a> HitInformation<'a> {
-    pub fn zero() -> HitInformation<'a> {
-        HitInformation {
-            hit_point: Vec3::new(0.0, 0.0, 0.0),
-            hit_normal: Vec3::new(0.0, 0.0, 0.0),
-            hit_material: &Lambertian{albedo: Vec3::new(1.0,1.0,1.0)},
-            dist_from_ray_orig: std::f64::MAX,
-        }
-    }
-}
-*/
-
 pub trait Intersectable {
     fn intersect_with_ray(&self, ray: &Ray) -> Option<HitInformation>;
 }
@@ -66,12 +53,6 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    //
-    //    pub fn new<M: RayScattering + Sync + 'static>(center: Vec3, radius: f64, material: M) -> Sphere{
-    //        let s = Sphere{center: center, radius: radius, material: Box::new(material)};
-    //        return s;
-    //      }
-
     ///
     /// Compute intersection of ray and sphere
     /// ray: r(t) = o + td
@@ -105,7 +86,7 @@ impl Sphere {
                 hit_normal: hit_normal,
                 hit_point: hit_point,
                 hit_material: &*self.material,
-                dist_from_ray_orig: hit_point.length(),
+                dist_from_ray_orig: hit_point.length(), // todo: fix this
             };
             return Some(hit_info);
         }
@@ -123,7 +104,7 @@ pub struct Scene {
 }
 
 impl Scene {
-    fn hit<'a>(&'a self, ray: &Ray, min_dist: f64) -> Option<HitInformation> {
+    fn hit<'a>(&'a self, ray: &Ray, min_dist: f64, max_dist: f64) -> Option<HitInformation> {
         let mut closest_hit_rec = None;
         let mut closest_so_far = std::f64::MAX;
 
@@ -133,6 +114,7 @@ impl Scene {
                 let hit_rec = hit_info_op.unwrap();
                 if hit_rec.dist_from_ray_orig < closest_so_far
                     && hit_rec.dist_from_ray_orig > min_dist
+                    && hit_rec.dist_from_ray_orig < max_dist
                 {
                     closest_so_far = hit_rec.dist_from_ray_orig;
                     closest_hit_rec = Some(hit_rec);
@@ -145,8 +127,9 @@ impl Scene {
 
 pub fn colorize(ray: &Ray, scene: &Scene, bg_color: &Vec3, current_depth: u32) -> Vec3 {
     let min_dist = 0.001;
+    let max_dist = 2000.0;
 
-    let hit_opt = scene.hit(&ray, min_dist);
+    let hit_opt = scene.hit(&ray, min_dist, max_dist);
 
     if hit_opt.is_some() {
         let closest_hit_info = hit_opt.unwrap();
@@ -165,21 +148,22 @@ pub fn colorize(ray: &Ray, scene: &Scene, bg_color: &Vec3, current_depth: u32) -
             // println!("Attentuation {:?}, next color {:?}", attentuation, next_color);
             return attentuation * colorize(&scattered_ray, scene, bg_color, current_depth - 1);
         } else {
+            if current_depth > 0 {
+                println!("Ray was comppetely attentuated at depth {}!", current_depth);
+                println!("Material was {:?}", attentuation);
+            }
             //let t = 0.5 * (ray.direction.y + 1.0);
-
-            let t = 0.5 * (ray.direction.y + 1.0);
-            return (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * *bg_color; /*
-                                                                         println!("t interm: {}", t);
-                                                                         return *bg_color;
-                                                                         */
+            //return (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * *bg_color;
+            return *bg_color;
         }
     } else {
-        let t = 0.5 * (ray.direction.y + 1.0);
-        return (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * *bg_color;
+        //let t = 0.5 * (ray.direction.y + 1.0);
+        //return (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * *bg_color;
         /*
         println!("t final: {}", t);
         return *bg_color;
         */
+        return *bg_color;
     }
 }
 
@@ -201,7 +185,7 @@ pub fn render_scene(
     };
     let cam_pos = Vec3 {
         x: 0.0,
-        y: 0.0,
+        y: 2.0,
         z: 0.0,
     };
     let focal_len_mm = 35.0;
@@ -215,8 +199,8 @@ pub fn render_scene(
                 .into_par_iter() // TODO: find way to share!
                 .map(|row_idx| {
                     let bg_color = Vec3 {
-                        x: 0.8,
-                        y: 0.8,
+                        x: 0.7,
+                        y: 0.7,
                         z: 0.9,
                     };
 
@@ -243,12 +227,4 @@ pub fn render_scene(
         *pixel = image::Rgb([r, g, b]);
     }
     return imgbuf;
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
 }
