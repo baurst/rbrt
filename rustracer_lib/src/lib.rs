@@ -2,7 +2,11 @@ extern crate image;
 extern crate rand;
 extern crate rayon;
 
+pub mod dielectric;
+pub mod lambertian;
+pub mod metal;
 pub mod vec3;
+
 use vec3::Vec3;
 
 pub mod cam;
@@ -79,15 +83,27 @@ impl Sphere {
         if num_hits == 0 {
             return None;
         } else {
-            let ray_param = (-b - sol.sqrt()) / (2.0 * a);
+            let mut ray_param = (-b - sol.sqrt()) / (2.0 * a);
+            if num_hits == 2 && ray_param < 0.0 {
+                //point is behind the camera!
+                ray_param = (-b + sol.sqrt()) / (2.0 * a);
+                if ray_param < 0.0 {
+                    return None; // both points on the ray are negative
+                }
+            }
+
             let hit_point = ray.point_at(ray_param);
             let hit_normal = hit_point - self.center;
             let hit_info = HitInformation {
                 hit_normal: hit_normal,
                 hit_point: hit_point,
                 hit_material: &*self.material,
-                dist_from_ray_orig: hit_point.length(), // todo: fix this
+                dist_from_ray_orig: (ray.origin - hit_point).length(),
             };
+            if hit_point.z < 0.0 {
+                //println!("Encountered hit at {:?}", hit_point);
+                //assert!(false);
+            }
             return Some(hit_info);
         }
     }

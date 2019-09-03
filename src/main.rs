@@ -2,7 +2,10 @@ extern crate clap;
 extern crate rustracer_lib;
 
 use clap::{App, Arg};
-use rustracer_lib::materials::{Dielectric, Lambertian, Metal};
+use rustracer_lib::dielectric::Dielectric;
+use rustracer_lib::lambertian::Lambertian;
+use rustracer_lib::metal::Metal;
+
 use rustracer_lib::vec3::Vec3;
 use rustracer_lib::{Light, Scene, Sphere};
 
@@ -68,7 +71,7 @@ fn main() {
         material: Box::new(Lambertian {
             albedo: Vec3 {
                 x: 0.1,
-                y: 0.9,
+                y: 0.5,
                 z: 0.1,
             },
         }),
@@ -86,6 +89,22 @@ fn main() {
                 x: 0.4,
                 y: 0.4,
                 z: 0.9,
+            },
+        }),
+    };
+
+    let sun = Sphere {
+        center: Vec3 {
+            x: 0.0,
+            y: 11.0,
+            z: 0.0,
+        },
+        radius: 3.0,
+        material: Box::new(Lambertian {
+            albedo: Vec3 {
+                x: 1.0,
+                y: 1.0,
+                z: 1.0,
             },
         }),
     };
@@ -111,7 +130,7 @@ fn main() {
         center: Vec3 {
             x: -1.0,
             y: 2.0,
-            z: -3.0,
+            z: -2.0,
         },
         radius: 0.4,
         material: Box::new(Dielectric { ref_idx: 1.4 }),
@@ -132,7 +151,7 @@ fn main() {
 
     let lights = vec![light];
 
-    let spheres = vec![matte_sphere, metal_sphere, earth, glass_sphere];
+    let spheres = vec![matte_sphere, metal_sphere, earth, glass_sphere, sun];
 
     let scene = Scene {
         spheres: spheres,
