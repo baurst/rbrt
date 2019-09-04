@@ -7,6 +7,7 @@ use rustracer_lib::lambertian::Lambertian;
 use rustracer_lib::metal::Metal;
 
 use rustracer_lib::sphere::Sphere;
+use rustracer_lib::triangle::Triangle;
 use rustracer_lib::vec3::Vec3;
 use rustracer_lib::{Light, Scene};
 
@@ -63,18 +64,10 @@ fn main() {
         .expect("Please provide valid number of samples per pixel!");
 
     let earth = Sphere {
-        center: Vec3 {
-            x: 0.0,
-            y: -1000.5,
-            z: 0.0,
-        },
+        center: Vec3::new(0.0, -1000.5, 0.0),
         radius: 1000.0,
         material: Box::new(Lambertian {
-            albedo: Vec3 {
-                x: 0.05,
-                y: 0.2,
-                z: 0.05,
-            },
+            albedo: Vec3::new(0.05, 0.2, 0.05),
         }),
     };
 
@@ -134,13 +127,25 @@ fn main() {
         },
     };
 
+    let test_tri = Triangle {
+        corner_a: Vec3::new(2.0, 2.0, -5.0),
+        corner_b: Vec3::new(3.0, 2.0, -5.0),
+        corner_c: Vec3::new(2.0, 3.0, -5.0),
+        material: Box::new(Lambertian {
+            albedo: Vec3::new(0.05, 0.2, 0.05),
+        }),
+    };
+
     let lights = vec![light];
 
     let spheres = vec![matte_sphere, metal_sphere, earth, glass_sphere];
 
+    let triangles = vec![test_tri];
+
     let scene = Scene {
         spheres: spheres,
         lights: lights,
+        triangles: triangles,
     };
 
     let img_buf = rustracer_lib::render_scene(height, width, num_samples, scene);

@@ -7,11 +7,12 @@ pub mod lambertian;
 pub mod metal;
 pub mod ray;
 pub mod sphere;
+pub mod triangle;
 pub mod vec3;
 
 use ray::Ray;
 use sphere::Sphere;
-
+use triangle::Triangle;
 use vec3::Vec3;
 
 pub mod cam;
@@ -43,6 +44,7 @@ pub struct Light {
 
 pub struct Scene {
     pub spheres: Vec<Sphere>,
+    pub triangles: Vec<Triangle>,
     pub lights: Vec<Light>,
 }
 
