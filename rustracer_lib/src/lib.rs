@@ -11,8 +11,6 @@ pub mod triangle;
 pub mod vec3;
 
 use ray::Ray;
-use sphere::Sphere;
-use triangle::Triangle;
 use vec3::Vec3;
 
 pub mod cam;
@@ -65,7 +63,6 @@ impl Scene {
                 }
             }
         }
-
         return closest_hit_rec;
     }
 }
@@ -132,7 +129,6 @@ pub fn render_scene(
                         color += colorize(&ray, &scene, &bg_color, 50);
                     }
                     color = color * (1.0 / num_samples as f64);
-                    //println!("{:#?}",color );
                     color
                 })
                 .collect();

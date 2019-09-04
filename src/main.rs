@@ -72,62 +72,34 @@ fn main() {
     };
 
     let matte_sphere: Box<dyn Intersectable + Send> = Box::new(Sphere {
-        center: Vec3 {
-            x: 0.0,
-            y: 1.0,
-            z: -11.0,
-        },
+        center: Vec3::new(0.0, 1.0, -11.0),
         radius: 2.0,
         material: Box::new(Lambertian {
-            albedo: Vec3 {
-                x: 0.1,
-                y: 0.1,
-                z: 0.9,
-            },
+            albedo: Vec3::new(0.1, 0.1, 0.9),
         }),
     });
 
     let metal_sphere = Sphere {
-        center: Vec3 {
-            x: 2.5,
-            y: 1.0,
-            z: -7.0,
-        },
+        center: Vec3::new(2.5, 1.0, -7.0),
         radius: 1.5,
         material: Box::new(Metal {
-            albedo: Vec3 {
-                x: 0.7,
-                y: 0.7,
-                z: 0.7,
-            },
+            albedo: Vec3::new(0.7, 0.7, 0.7),
             fuzz: 0.05,
         }),
     };
 
     let glass_sphere = Sphere {
-        center: Vec3 {
-            x: -2.5,
-            y: 1.0,
-            z: -7.0,
-        },
+        center: Vec3::new(-2.5, 1.0, -7.0),
         radius: 1.5,
         material: Box::new(Dielectric { ref_idx: 1.4 }),
     };
 
     let light = Light {
-        position: Vec3 {
-            x: 100.0,
-            y: 100.0,
-            z: -5.0,
-        },
-        color: Vec3 {
-            x: 0.4,
-            y: 1.0,
-            z: 0.4,
-        },
+        position: Vec3::new(100.0, 100.0, -5.0),
+        color: Vec3::new(0.4, 1.0, 0.4),
     };
 
-    let test_tri:  Box<dyn Intersectable + Send> = Box::new( Triangle {
+    let test_tri: Box<dyn Intersectable + Send> = Box::new(Triangle {
         corner_a: Vec3::new(3.0, 2.0, -4.0),
         corner_b: Vec3::new(4.0, 2.0, -4.0),
         corner_c: Vec3::new(3.0, 3.0, -4.0),
