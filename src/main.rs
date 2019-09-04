@@ -9,7 +9,7 @@ use rustracer_lib::metal::Metal;
 use rustracer_lib::sphere::Sphere;
 use rustracer_lib::triangle::Triangle;
 use rustracer_lib::vec3::Vec3;
-use rustracer_lib::{Light, Scene};
+use rustracer_lib::{Intersectable, Light, Scene};
 
 fn main() {
     let app = App::new("rustracer")
@@ -71,7 +71,7 @@ fn main() {
         }),
     };
 
-    let matte_sphere = Sphere {
+    let matte_sphere: Box<dyn Intersectable + Send> = Box::new(Sphere {
         center: Vec3 {
             x: 0.0,
             y: 1.0,
@@ -85,7 +85,7 @@ fn main() {
                 z: 0.9,
             },
         }),
-    };
+    });
 
     let metal_sphere = Sphere {
         center: Vec3 {
@@ -127,25 +127,26 @@ fn main() {
         },
     };
 
-    let test_tri = Triangle {
+    let test_tri:  Box<dyn Intersectable + Send> = Box::new( Triangle {
         corner_a: Vec3::new(3.0, 2.0, -4.0),
         corner_b: Vec3::new(4.0, 2.0, -4.0),
         corner_c: Vec3::new(3.0, 3.0, -4.0),
         material: Box::new(Lambertian {
             albedo: Vec3::new(0.5, 0.2, 0.2),
         }),
-    };
+    });
 
     let lights = vec![light];
 
-    let spheres = vec![matte_sphere, metal_sphere, earth, glass_sphere];
-
+    let elements: Vec<Box<dyn Intersectable>> = vec![matte_sphere, test_tri];
+    /*
+        , Box::new(metal_sphere), Box::new(earth), Box::new(glass_sphere), Box::new(test_tri)];
+    */
     let triangles = vec![test_tri];
 
     let scene = Scene {
-        spheres: spheres,
+        elements: elements,
         lights: lights,
-        triangles: triangles,
     };
 
     let img_buf = rustracer_lib::render_scene(height, width, num_samples, scene);

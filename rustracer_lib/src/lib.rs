@@ -43,8 +43,7 @@ pub struct Light {
 }
 
 pub struct Scene {
-    pub spheres: Vec<Sphere>,
-    pub triangles: Vec<Triangle>,
+    pub elements: Vec<Box<dyn Intersectable + Sync>>,
     pub lights: Vec<Light>,
 }
 
@@ -53,22 +52,8 @@ impl Scene {
         let mut closest_hit_rec = None;
         let mut closest_so_far = std::f64::MAX;
 
-        for sphere in &self.spheres {
+        for sphere in &self.elements {
             let hit_info_op = sphere.intersect_with_ray(&ray);
-            if hit_info_op.is_some() {
-                let hit_rec = hit_info_op.unwrap();
-                if hit_rec.dist_from_ray_orig < closest_so_far
-                    && hit_rec.dist_from_ray_orig > min_dist
-                    && hit_rec.dist_from_ray_orig < max_dist
-                {
-                    closest_so_far = hit_rec.dist_from_ray_orig;
-                    closest_hit_rec = Some(hit_rec);
-                }
-            }
-        }
-
-        for triangle in &self.triangles {
-            let hit_info_op = triangle.intersect_with_ray(&ray);
             if hit_info_op.is_some() {
                 let hit_rec = hit_info_op.unwrap();
                 if hit_rec.dist_from_ray_orig < closest_so_far

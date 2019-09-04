@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 
 use crate::vec3::Vec3;
-use crate::{HitInformation, Ray, RayScattering};
+use crate::{HitInformation, Intersectable, Ray, RayScattering};
 
 pub struct Sphere {
     pub center: Vec3,
@@ -9,7 +9,7 @@ pub struct Sphere {
     pub material: Box<dyn RayScattering + Sync>,
 }
 
-impl Sphere {
+impl Intersectable for Sphere {
     ///
     /// Compute intersection of ray and sphere
     /// ray: r(t) = o + td
@@ -19,7 +19,7 @@ impl Sphere {
     /// t1/2 = (-B +- sqrt(B^2 - 4AC))/(2A)
     ///
     /// Hitinformation has anonymous lifetime?
-    pub fn intersect_with_ray<'a>(&'a self, ray: &Ray) -> Option<HitInformation> {
+    fn intersect_with_ray<'a>(&'a self, ray: &Ray) -> Option<HitInformation> {
         let a = ray.direction.dot(&ray.direction);
         let l = ray.origin - self.center;
         let b = (ray.direction * 2.0).dot(&l);
