@@ -5,8 +5,11 @@ extern crate rayon;
 pub mod dielectric;
 pub mod lambertian;
 pub mod metal;
+pub mod ray;
 pub mod sphere;
 pub mod vec3;
+
+use ray::Ray;
 use sphere::Sphere;
 
 use vec3::Vec3;
@@ -31,24 +34,6 @@ pub struct HitInformation<'a> {
 
 pub trait Intersectable {
     fn intersect_with_ray(&self, ray: &Ray) -> Option<HitInformation>;
-}
-
-#[derive(Copy, Clone, Debug)]
-pub struct Ray {
-    pub origin: Vec3,
-    pub direction: Vec3,
-}
-
-impl Ray {
-    pub fn point_at(&self, ray_param: f64) -> Vec3 {
-        return self.origin + ray_param * self.direction;
-    }
-    pub fn zero() -> Ray {
-        Ray {
-            origin: Vec3::zero(),
-            direction: Vec3::zero(),
-        }
-    }
 }
 
 pub struct Light {
