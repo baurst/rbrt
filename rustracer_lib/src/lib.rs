@@ -160,26 +160,14 @@ pub fn colorize(ray: &Ray, scene: &Scene, bg_color: &Vec3, current_depth: u32) -
                 &mut scattered_ray,
             )
         {
-            // println!("Scattered Ray: {:?}", scattered_ray);
-            // println!("Attentuation {:?}, next color {:?}", attentuation, next_color);
             return attentuation * colorize(&scattered_ray, scene, bg_color, current_depth - 1);
         } else {
-            if current_depth > 0 {
-                println!("Ray was comppetely attentuated at depth {}!", current_depth);
-                println!("Material was {:?}", attentuation);
-            }
-            //let t = 0.5 * (ray.direction.y + 1.0);
-            //return (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * *bg_color;
-            return *bg_color;
+            // ray was completely attentuated
+            return Vec3::zero();
         }
     } else {
-        //let t = 0.5 * (ray.direction.y + 1.0);
-        //return (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * *bg_color;
-        /*
-        println!("t final: {}", t);
-        return *bg_color;
-        */
-        return *bg_color;
+        let t = 0.5 * (ray.direction.y + 1.0); // t=[0,1]
+        return t * Vec3::new(1.0, 1.0, 1.0) + (1.0 -t) * *bg_color;
     }
 }
 
@@ -189,35 +177,23 @@ pub fn render_scene(
     num_samples: u32,
     scene: Scene,
 ) -> image::ImageBuffer<Rgb<u8>, Vec<u8>> {
-    let cam_up = Vec3 {
-        x: 0.0,
-        y: 1.0,
-        z: 0.0,
-    };
-    let cam_look_at = Vec3 {
-        x: 0.0,
-        y: 0.0,
-        z: -1.0,
-    };
-    let cam_pos = Vec3 {
-        x: 0.0,
-        y: 2.0,
-        z: 0.0,
-    };
+    let cam_up = Vec3::new(0.0,1.0,0.4).normalize();
+    let cam_look_at = Vec3::new(0.0,-0.3,-1.0).normalize();
+    let cam_pos = Vec3::new(0.0,6.0,4.0);
     let focal_len_mm = 35.0;
 
     let cam = Camera::new(cam_pos, cam_look_at, cam_up, height, width, focal_len_mm);
 
     let hdr_img: Vec<Vec<Vec3>> = (0..width)
-        .into_par_iter() // TODO: find way to share!
+        .into_par_iter()
         .map(|col_idx| {
             let col: Vec<Vec3> = (0..height)
-                .into_par_iter() // TODO: find way to share!
+                .into_par_iter()
                 .map(|row_idx| {
                     let bg_color = Vec3 {
-                        x: 0.7,
-                        y: 0.7,
-                        z: 0.9,
+                        x: 0.2,
+                        y: 0.2,
+                        z: 0.8,
                     };
 
                     let mut color = Vec3::new(0.0, 0.0, 0.0);
