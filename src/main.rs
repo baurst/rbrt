@@ -6,8 +6,9 @@ use rustracer_lib::dielectric::Dielectric;
 use rustracer_lib::lambertian::Lambertian;
 use rustracer_lib::metal::Metal;
 
+use rustracer_lib::sphere::Sphere;
 use rustracer_lib::vec3::Vec3;
-use rustracer_lib::{Light, Scene, Sphere};
+use rustracer_lib::{Light, Scene};
 
 fn main() {
     let app = App::new("rustracer")

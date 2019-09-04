@@ -5,7 +5,9 @@ extern crate rayon;
 pub mod dielectric;
 pub mod lambertian;
 pub mod metal;
+pub mod sphere;
 pub mod vec3;
+use sphere::Sphere;
 
 use vec3::Vec3;
 
@@ -16,7 +18,6 @@ pub mod materials;
 use materials::RayScattering;
 
 use image::Rgb;
-use std::cmp::Ordering;
 
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
@@ -46,65 +47,6 @@ impl Ray {
         Ray {
             origin: Vec3::zero(),
             direction: Vec3::zero(),
-        }
-    }
-}
-
-pub struct Sphere {
-    pub center: Vec3,
-    pub radius: f64,
-    pub material: Box<dyn RayScattering + Sync>,
-}
-
-impl Sphere {
-    ///
-    /// Compute intersection of ray and sphere
-    /// ray: r(t) = o + td
-    /// sphere: (p-c)*(p-c) = r^2
-    /// insert ray for p into sphere equation, then solve quadratic equation for t
-    /// (o+td-c)(o+td-c)=r^2
-    /// t1/2 = (-B +- sqrt(B^2 - 4AC))/(2A)
-    ///
-    /// Hitinformation has anonymous lifetime?
-    fn intersect_with_ray<'a>(&'a self, ray: &Ray) -> Option<HitInformation> {
-        let a = ray.direction.dot(&ray.direction);
-        let l = ray.origin - self.center;
-        let b = (ray.direction * 2.0).dot(&l);
-        let c = l.dot(&l) - self.radius.powf(2.0);
-
-        let sol = b.powf(2.0) - 4.0 * a * c;
-
-        let num_hits = match sol.partial_cmp(&0.0).expect("Encountered NAN") {
-            Ordering::Less => 0,
-            Ordering::Greater => 2,
-            Ordering::Equal => 1,
-        };
-
-        if num_hits == 0 {
-            return None;
-        } else {
-            let mut ray_param = (-b - sol.sqrt()) / (2.0 * a);
-            if num_hits == 2 && ray_param < 0.0 {
-                //point is behind the camera!
-                ray_param = (-b + sol.sqrt()) / (2.0 * a);
-                if ray_param < 0.0 {
-                    return None; // both points on the ray are negative
-                }
-            }
-
-            let hit_point = ray.point_at(ray_param);
-            let hit_normal = hit_point - self.center;
-            let hit_info = HitInformation {
-                hit_normal: hit_normal,
-                hit_point: hit_point,
-                hit_material: &*self.material,
-                dist_from_ray_orig: (ray.origin - hit_point).length(),
-            };
-            if hit_point.z < 0.0 {
-                //println!("Encountered hit at {:?}", hit_point);
-                //assert!(false);
-            }
-            return Some(hit_info);
         }
     }
 }
@@ -167,7 +109,7 @@ pub fn colorize(ray: &Ray, scene: &Scene, bg_color: &Vec3, current_depth: u32) -
         }
     } else {
         let t = 0.5 * (ray.direction.y + 1.0); // t=[0,1]
-        return t * Vec3::new(1.0, 1.0, 1.0) + (1.0 -t) * *bg_color;
+        return t * Vec3::new(1.0, 1.0, 1.0) + (1.0 - t) * *bg_color;
     }
 }
 
@@ -177,9 +119,9 @@ pub fn render_scene(
     num_samples: u32,
     scene: Scene,
 ) -> image::ImageBuffer<Rgb<u8>, Vec<u8>> {
-    let cam_up = Vec3::new(0.0,1.0,0.4).normalize();
-    let cam_look_at = Vec3::new(0.0,-0.3,-1.0).normalize();
-    let cam_pos = Vec3::new(0.0,6.0,4.0);
+    let cam_up = Vec3::new(0.0, 1.0, 0.4).normalize();
+    let cam_look_at = Vec3::new(0.0, -0.3, -1.0).normalize();
+    let cam_pos = Vec3::new(0.0, 6.0, 4.0);
     let focal_len_mm = 35.0;
 
     let cam = Camera::new(cam_pos, cam_look_at, cam_up, height, width, focal_len_mm);
