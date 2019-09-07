@@ -31,7 +31,7 @@ pub struct HitInformation<'a> {
     pub dist_from_ray_orig: f64,
 }
 
-pub trait Intersectable: Send + Sync {
+pub trait Intersectable: Sync {
     fn intersect_with_ray(&self, ray: &Ray) -> Option<HitInformation>;
 }
 

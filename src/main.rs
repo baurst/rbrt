@@ -63,15 +63,15 @@ fn main() {
         .parse::<u32>()
         .expect("Please provide valid number of samples per pixel!");
 
-    let earth = Sphere {
+    let earth = Box::new(Sphere {
         center: Vec3::new(0.0, -1000.5, 0.0),
         radius: 1000.0,
         material: Box::new(Lambertian {
             albedo: Vec3::new(0.05, 0.2, 0.05),
         }),
-    };
+    });
 
-    let matte_sphere: Box<dyn Intersectable + Send + Sync> = Box::new(Sphere {
+    let matte_sphere = Box::new(Sphere {
         center: Vec3::new(0.0, 1.0, -11.0),
         radius: 2.0,
         material: Box::new(Lambertian {
@@ -79,27 +79,27 @@ fn main() {
         }),
     });
 
-    let metal_sphere = Sphere {
+    let metal_sphere = Box::new(Sphere {
         center: Vec3::new(2.5, 1.0, -7.0),
         radius: 1.5,
         material: Box::new(Metal {
             albedo: Vec3::new(0.7, 0.7, 0.7),
             fuzz: 0.05,
         }),
-    };
+    });
 
-    let glass_sphere = Sphere {
+    let glass_sphere = Box::new(Sphere {
         center: Vec3::new(-2.5, 1.0, -7.0),
         radius: 1.5,
         material: Box::new(Dielectric { ref_idx: 1.4 }),
-    };
+    });
 
     let light = Light {
         position: Vec3::new(100.0, 100.0, -5.0),
         color: Vec3::new(0.4, 1.0, 0.4),
     };
 
-    let test_tri: Box<dyn Intersectable + Send + Sync> = Box::new(Triangle {
+    let test_tri = Box::new(Triangle {
         corner_a: Vec3::new(3.0, 2.0, -4.0),
         corner_b: Vec3::new(4.0, 2.0, -4.0),
         corner_c: Vec3::new(3.0, 3.0, -4.0),
@@ -110,11 +110,8 @@ fn main() {
 
     let lights = vec![light];
 
-    let elements: Vec<Box<dyn Intersectable>> = vec![matte_sphere, test_tri];
-    /*
-        , Box::new(metal_sphere), Box::new(earth), Box::new(glass_sphere), Box::new(test_tri)];
-    */
-    let triangles = vec![test_tri];
+    let elements: Vec<Box<dyn Intersectable + Sync>> =
+        vec![matte_sphere, glass_sphere, metal_sphere, test_tri, earth];
 
     let scene = Scene {
         elements: elements,
