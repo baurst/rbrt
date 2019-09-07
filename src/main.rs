@@ -100,8 +100,8 @@ fn main() {
     };
 
     let test_tri = Box::new(Triangle {
-        corner_a: Vec3::new(3.0, 2.0, -4.0),
         corner_b: Vec3::new(4.0, 2.0, -4.0),
+        corner_a: Vec3::new(3.0, 2.0, -4.0),
         corner_c: Vec3::new(3.0, 3.0, -4.0),
         material: Box::new(Lambertian {
             albedo: Vec3::new(0.5, 0.2, 0.2),

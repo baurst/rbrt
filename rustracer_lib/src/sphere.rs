@@ -18,7 +18,6 @@ impl Intersectable for Sphere {
     /// (o+td-c)(o+td-c)=r^2
     /// t1/2 = (-B +- sqrt(B^2 - 4AC))/(2A)
     ///
-    /// Hitinformation has anonymous lifetime?
     fn intersect_with_ray<'a>(&'a self, ray: &Ray) -> Option<HitInformation> {
         let a = ray.direction.dot(&ray.direction);
         let l = ray.origin - self.center;

@@ -2,6 +2,9 @@ use crate::vec3::Vec3;
 use crate::{HitInformation, Intersectable, Ray, RayScattering};
 
 pub struct Triangle {
+    ///
+    /// Convention: counter clockwise!
+    ///
     pub corner_a: Vec3,
     pub corner_b: Vec3,
     pub corner_c: Vec3,
@@ -52,5 +55,27 @@ impl Intersectable for Triangle {
         }
 
         return None;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::{Triangle, Vec3};
+    use crate::lambertian::Lambertian; // dont need Material here, use Option?
+    #[test]
+    fn test_random_points_in_unit_sphere() {
+        let test_tri = Box::new(Triangle {
+            corner_b: Vec3::new(1.0, 1.0, 0.0),
+            corner_a: Vec3::new(1.0, 0.0, 0.0),
+            corner_c: Vec3::new(0.0, 0.0, 0.0),
+            material: Box::new(Lambertian {
+                albedo: Vec3::new(0.5, 0.2, 0.2),
+            }),
+        });
+
+        let normal = test_tri.get_normal();
+
+        assert_eq!(normal, Vec3::new(0.0, 0.0, 1.0));
     }
 }
