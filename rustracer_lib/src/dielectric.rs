@@ -91,7 +91,7 @@ pub fn refract(
 }
 
 mod test {
-    use super::*;
+    use super::{refract, Vec3};
 
     #[test]
     fn test_refraction() {

@@ -36,7 +36,7 @@ pub fn reflect(incoming_ray_dir: &Vec3, normal: &Vec3) -> Vec3 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{random_point_in_unit_sphere, reflect, Vec3};
     #[test]
     fn test_random_points_in_unit_sphere() {
         for _i in 0..20 {

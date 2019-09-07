@@ -71,7 +71,7 @@ fn main() {
         }),
     };
 
-    let matte_sphere: Box<dyn Intersectable + Send> = Box::new(Sphere {
+    let matte_sphere: Box<dyn Intersectable + Send + Sync> = Box::new(Sphere {
         center: Vec3::new(0.0, 1.0, -11.0),
         radius: 2.0,
         material: Box::new(Lambertian {
@@ -99,7 +99,7 @@ fn main() {
         color: Vec3::new(0.4, 1.0, 0.4),
     };
 
-    let test_tri: Box<dyn Intersectable + Send> = Box::new(Triangle {
+    let test_tri: Box<dyn Intersectable + Send + Sync> = Box::new(Triangle {
         corner_a: Vec3::new(3.0, 2.0, -4.0),
         corner_b: Vec3::new(4.0, 2.0, -4.0),
         corner_c: Vec3::new(3.0, 3.0, -4.0),
