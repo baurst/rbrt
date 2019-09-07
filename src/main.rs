@@ -1,5 +1,8 @@
 extern crate clap;
 extern crate rustracer_lib;
+extern crate tobj;
+
+use std::path::Path;
 
 use clap::{App, Arg};
 use rustracer_lib::dielectric::Dielectric;
@@ -110,8 +113,57 @@ fn main() {
 
     let lights = vec![light];
 
-    let elements: Vec<Box<dyn Intersectable + Sync>> =
+    let mut model_elements: Vec<Box<dyn Intersectable + Sync>> = Vec::new();
+
+    let cube = tobj::load_obj(&Path::new("cube.obj"));
+    // todo: fix this hacked filepath!
+    assert!(cube.is_ok());
+    let (models, _materials) = cube.unwrap();
+
+    let transl = Vec3::new(3.0, 3.0, -7.0);
+
+    println!("# of models: {}", models.len());
+    for (i, m) in models.iter().enumerate() {
+        let mesh = &m.mesh;
+        println!("Size of model[{}].indices: {}", i, mesh.indices.len());
+        // Normals and texture coordinates are also loaded, but not printed in this example
+        println!("model[{}].vertices: {}", i, mesh.positions.len() / 3);
+        assert!(mesh.positions.len() % 3 == 0);
+        let mut triangle_vertices: Vec<Vec3> = vec![Vec3::zero(); 3];
+        for f in 0..mesh.indices.len() / 3 {
+            println!(
+                "    idx[{}] = {}, {}, {}.",
+                f,
+                mesh.indices[3 * f],
+                mesh.indices[3 * f + 1],
+                mesh.indices[3 * f + 2]
+            );
+            for idx in 0..3 {
+                triangle_vertices[idx] = Vec3::new(
+                    mesh.positions[(mesh.indices[3 * f + idx] + 0) as usize] as f64,
+                    mesh.positions[(mesh.indices[3 * f + idx] + 1) as usize] as f64,
+                    mesh.positions[(mesh.indices[3 * f + idx] + 2) as usize] as f64,
+                );
+                println!("    idx[{}] = {:?} ", 3 * f + idx, triangle_vertices[idx]);
+            }
+            let tri = Box::new(Triangle {
+                corner_a: triangle_vertices[0] + transl,
+                corner_b: triangle_vertices[1] + transl,
+                corner_c: triangle_vertices[2] + transl,
+                material: Box::new(Lambertian {
+                    albedo: Vec3::new(0.2, 0.2, 0.8),
+                }),
+            });
+            model_elements.push(tri);
+        }
+    }
+
+    println!("# of model_elements: {}", model_elements.len());
+
+    let mut elements: Vec<Box<dyn Intersectable + Sync>> =
         vec![matte_sphere, glass_sphere, metal_sphere, test_tri, earth];
+
+    elements.append(&mut model_elements);
 
     let scene = Scene {
         elements: elements,

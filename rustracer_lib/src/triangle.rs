@@ -60,14 +60,14 @@ impl Intersectable for Triangle {
 
 #[cfg(test)]
 mod tests {
-
     use super::{Triangle, Vec3};
-    use crate::lambertian::Lambertian; // dont need Material here, use Option?
+    // dont need Material here, use Option?
+    use crate::lambertian::Lambertian;
     #[test]
-    fn test_random_points_in_unit_sphere() {
+    fn test_triangle_normal() {
         let test_tri = Box::new(Triangle {
-            corner_b: Vec3::new(1.0, 1.0, 0.0),
             corner_a: Vec3::new(1.0, 0.0, 0.0),
+            corner_b: Vec3::new(1.0, 1.0, 0.0),
             corner_c: Vec3::new(0.0, 0.0, 0.0),
             material: Box::new(Lambertian {
                 albedo: Vec3::new(0.5, 0.2, 0.2),
@@ -77,5 +77,18 @@ mod tests {
         let normal = test_tri.get_normal();
 
         assert_eq!(normal, Vec3::new(0.0, 0.0, 1.0));
+
+        let test_tri = Box::new(Triangle {
+            corner_a: Vec3::new(1.0, 0.0, 0.0),
+            corner_b: Vec3::new(1.0, 0.0, 1.0),
+            corner_c: Vec3::new(0.0, 1.0, 0.0),
+            material: Box::new(Lambertian {
+                albedo: Vec3::new(0.5, 0.2, 0.2),
+            }),
+        });
+
+        let normal = test_tri.get_normal();
+
+        assert_eq!(normal, Vec3::new(-1.0, -1.0, 0.0).normalize());
     }
 }
