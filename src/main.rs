@@ -144,7 +144,7 @@ fn main() {
                 corner_a: triangle_vertices[0] + transl,
                 corner_b: triangle_vertices[1] + transl,
                 corner_c: triangle_vertices[2] + transl,
-                material: Box::new(Dielectric { ref_idx: 1.9 }),
+                material: Box::new(Lambertian {  albedo: Vec3::new(0.5, 0.2, 0.2)}),
             });
             model_elements.push(tri);
         }
