@@ -120,8 +120,6 @@ fn main() {
     assert!(cube.is_ok());
     let (models, materials) = cube.unwrap();
 
-
-
     println!("# of models: {}", models.len());
     println!("# of materials: {}", materials.len());
     for (i, m) in models.iter().enumerate() {
@@ -157,25 +155,25 @@ fn main() {
     let scale = 1.0;
 
     for (i, m) in models.iter().enumerate() {
-
         let mesh = &m.mesh;
         // Normals and texture coordinates are also loaded, but not printed in this example
         assert!(mesh.positions.len() % 3 == 0);
         let mut triangle_vertices: Vec<Vec3> = vec![Vec3::zero(); 3];
         for f in 0..mesh.indices.len() / 3 {
-
-
             for idx in 0..3 {
-                let x_idx = 3* mesh.indices[3 * f + idx];
-                let y_idx = 3* mesh.indices[3 * f + idx] + 1;
-                let z_idx = 3* mesh.indices[3 * f + idx] + 2;
-                
+                let x_idx = 3 * mesh.indices[3 * f + idx];
+                let y_idx = 3 * mesh.indices[3 * f + idx] + 1;
+                let z_idx = 3 * mesh.indices[3 * f + idx] + 2;
+
                 triangle_vertices[idx] = Vec3::new(
                     mesh.positions[x_idx as usize] as f64 * scale,
                     mesh.positions[y_idx as usize] as f64 * scale,
-                    mesh.positions[z_idx as usize] as f64 * scale
+                    mesh.positions[z_idx as usize] as f64 * scale,
                 );
-                println!("    triangle {}, corner {} = {:?} ", f, idx, triangle_vertices[idx]);
+                println!(
+                    "    triangle {}, corner {} = {:?} ",
+                    f, idx, triangle_vertices[idx]
+                );
             }
             let tri = Box::new(Triangle {
                 corner_a: triangle_vertices[0] + transl,
@@ -183,12 +181,12 @@ fn main() {
                 corner_c: triangle_vertices[2] + transl,
                 material: Box::new(Metal {
                     albedo: Vec3::new(0.0, 0.2, 0.9),
-                fuzz: 0.01}),
+                    fuzz: 0.01,
+                }),
             });
             model_elements.push(tri);
         }
     }
-
 
     println!("# of model_elements: {}", model_elements.len());
 
