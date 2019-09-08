@@ -22,7 +22,7 @@ use materials::RayScattering;
 use image::Rgb;
 
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
-
+use std::sync::atomic::{AtomicUsize, Ordering};
 #[derive(Copy, Clone)]
 pub struct HitInformation<'a> {
     pub hit_point: Vec3,
@@ -110,6 +110,10 @@ pub fn render_scene(
 
     let cam = Camera::new(cam_pos, cam_look_at, cam_up, height, width, focal_len_mm);
 
+    println!("Starting rendering...");
+
+    let progress = AtomicUsize::new(0);
+
     let hdr_img: Vec<Vec<Vec3>> = (0..width)
         .into_par_iter()
         .map(|col_idx| {
@@ -132,6 +136,9 @@ pub fn render_scene(
                     color
                 })
                 .collect();
+            let prog = progress.fetch_add(1, Ordering::SeqCst);
+
+            print!("\r{:.1}% complete!", prog as f64 / width as f64 * 100.0);
             col
         })
         .collect();
