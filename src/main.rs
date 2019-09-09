@@ -1,8 +1,5 @@
 extern crate clap;
 extern crate rustracer_lib;
-extern crate tobj;
-
-use std::path::Path;
 
 use clap::{App, Arg};
 use rustracer_lib::dielectric::Dielectric;
@@ -10,7 +7,6 @@ use rustracer_lib::lambertian::Lambertian;
 use rustracer_lib::metal::Metal;
 
 use rustracer_lib::sphere::Sphere;
-use rustracer_lib::triangle::Triangle;
 use rustracer_lib::vec3::Vec3;
 use rustracer_lib::{Intersectable, Light, Scene};
 
@@ -104,51 +100,15 @@ fn main() {
 
     let lights = vec![light];
 
-    let mut model_elements: Vec<Box<dyn Intersectable + Sync>> = Vec::new();
-
-    let cube = tobj::load_obj(&Path::new("bunny.obj"));
-    // todo: fix this hacked filepath!
-    assert!(cube.is_ok());
-    let (models, _materials) = cube.unwrap();
-
+    let fp = "bunny.obj";
     let bunny_trans = Vec3::new(6.5, -2.0, -12.0);
     let bunny_scale = 45.0;
-
-    for (_i, m) in models.iter().enumerate() {
-        let mesh = &m.mesh;
-        // Normals and texture coordinates are also loaded, but not printed in this example
-        assert!(mesh.positions.len() % 3 == 0);
-        let mut triangle_vertices: Vec<Vec3> = vec![Vec3::zero(); 3];
-        for f in 0..mesh.indices.len() / 3 {
-            for idx in 0..3 {
-                let x_idx = 3 * mesh.indices[3 * f + idx];
-                let y_idx = 3 * mesh.indices[3 * f + idx] + 1;
-                let z_idx = 3 * mesh.indices[3 * f + idx] + 2;
-
-                triangle_vertices[idx] = Vec3::new(
-                    mesh.positions[x_idx as usize] as f64 * bunny_scale,
-                    mesh.positions[y_idx as usize] as f64 * bunny_scale,
-                    mesh.positions[z_idx as usize] as f64 * bunny_scale,
-                );
-            }
-            let tri = Box::new(Triangle {
-                corner_a: triangle_vertices[0] + bunny_trans,
-                corner_b: triangle_vertices[1] + bunny_trans,
-                corner_c: triangle_vertices[2] + bunny_trans,
-                material: Box::new(Lambertian {
-                    albedo: Vec3::new(0.7, 0.2, 0.2),
-                }),
-            });
-            model_elements.push(tri);
-        }
-    }
-
-    println!("Loaded {} triangles!", model_elements.len());
+    let mut bunny_mesh = rustracer_lib::mesh_io::load_mesh_from_file(fp, bunny_trans, bunny_scale);
 
     let mut elements: Vec<Box<dyn Intersectable + Sync>> =
         vec![matte_sphere, glass_sphere, metal_sphere, earth];
 
-    elements.append(&mut model_elements);
+    elements.append(&mut bunny_mesh);
 
     let scene = Scene {
         elements: elements,

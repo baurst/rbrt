@@ -12,4 +12,3 @@ edition = "2018"
 rustracer_lib = {path = "rustracer_lib"}
 clap = "2"
 image = "0.12"
-tobj = "0.1.10"

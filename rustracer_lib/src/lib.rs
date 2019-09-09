@@ -4,6 +4,7 @@ extern crate rayon;
 
 pub mod dielectric;
 pub mod lambertian;
+pub mod mesh_io;
 pub mod metal;
 pub mod ray;
 pub mod sphere;
