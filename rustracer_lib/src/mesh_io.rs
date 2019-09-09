@@ -6,7 +6,11 @@ use crate::triangle::Triangle;
 use crate::vec3::Vec3;
 use crate::Intersectable;
 
-pub fn load_mesh_from_file(filepath: &str, translation: Vec3, scale: f64) -> Vec<Box<dyn Intersectable + Sync>> {
+pub fn load_mesh_from_file(
+    filepath: &str,
+    translation: Vec3,
+    scale: f64,
+) -> Vec<Box<dyn Intersectable + Sync>> {
     let mut model_elements: Vec<Box<dyn Intersectable + Sync>> = Vec::new();
 
     let loaded_mesh = tobj::load_obj(&Path::new(filepath));

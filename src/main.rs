@@ -5,6 +5,7 @@ use clap::{App, Arg};
 use rustracer_lib::dielectric::Dielectric;
 use rustracer_lib::lambertian::Lambertian;
 use rustracer_lib::metal::Metal;
+use rustracer_lib::triangle::Triangle;
 
 use rustracer_lib::sphere::Sphere;
 use rustracer_lib::vec3::Vec3;
@@ -37,6 +38,12 @@ fn main() {
                 .default_value("800"),
         )
         .arg(
+            Arg::with_name("dry_run")
+                .short("d")
+                .long("dry")
+                .help("performs very fast dry run without expensive meshes"),
+        )
+        .arg(
             Arg::with_name("samples")
                 .short("s")
                 .long("samples")
@@ -61,6 +68,14 @@ fn main() {
         .unwrap()
         .parse::<u32>()
         .expect("Please provide valid number of samples per pixel!");
+
+    let is_dry_run = match matches.occurrences_of("dry_run") {
+        0 => false,
+        1 | _ => {
+            println!("Dry run, fast but no meshes!");
+            true
+        }
+    };
 
     let earth = Box::new(Sphere {
         center: Vec3::new(0.0, -1000.5, 0.0),
@@ -100,11 +115,23 @@ fn main() {
 
     let lights = vec![light];
 
-    let fp = "bunny.obj";
-    let bunny_trans = Vec3::new(6.5, -2.0, -12.0);
-    let bunny_scale = 45.0;
-    let mut bunny_mesh = rustracer_lib::mesh_io::load_mesh_from_file(fp, bunny_trans, bunny_scale);
-
+    let mut bunny_mesh = vec![];
+    if !is_dry_run {
+        let fp = "bunny.obj";
+        let bunny_trans = Vec3::new(6.5, -2.0, -12.0);
+        let bunny_scale = 45.0;
+        bunny_mesh = rustracer_lib::mesh_io::load_mesh_from_file(fp, bunny_trans, bunny_scale);
+    } else {
+        let test_tri = Box::new(Triangle {
+            corner_a: Vec3::new(1.0, 0.0, 0.0),
+            corner_b: Vec3::new(1.0, 1.0, 0.0),
+            corner_c: Vec3::new(0.0, 0.0, 0.0),
+            material: Box::new(Lambertian {
+                albedo: Vec3::new(0.5, 0.2, 0.2),
+            }),
+        });
+        bunny_mesh.push(test_tri);
+    }
     let mut elements: Vec<Box<dyn Intersectable + Sync>> =
         vec![matte_sphere, glass_sphere, metal_sphere, earth];
 
