@@ -70,46 +70,37 @@ fn main() {
         center: Vec3::new(0.0, -1000.5, 0.0),
         radius: 1000.0,
         material: Box::new(Lambertian {
-            albedo: Vec3::new(0.05, 0.2, 0.05),
+            albedo: Vec3::new(0.02, 0.2, 0.02),
         }),
     });
 
     let matte_sphere = Box::new(Sphere {
-        center: Vec3::new(0.0, 1.0, -11.0),
-        radius: 2.0,
+        center: Vec3::new(-3.5, 1.0, -9.0),
+        radius: 1.5,
         material: Box::new(Lambertian {
             albedo: Vec3::new(0.1, 0.1, 0.9),
         }),
     });
 
     let metal_sphere = Box::new(Sphere {
-        center: Vec3::new(2.5, 1.0, -7.0),
-        radius: 1.5,
+        center: Vec3::new(-1.0, 1.5, -15.0),
+        radius: 3.0,
         material: Box::new(Metal {
-            albedo: Vec3::new(0.7, 0.7, 0.7),
+            albedo: Vec3::new(0.8, 0.8, 0.8),
             fuzz: 0.05,
         }),
     });
 
     let glass_sphere = Box::new(Sphere {
-        center: Vec3::new(-2.5, 1.0, -7.0),
+        center: Vec3::new(2.75, 0.5, -9.0),
         radius: 1.5,
         material: Box::new(Dielectric { ref_idx: 1.4 }),
     });
 
     let light = Light {
-        position: Vec3::new(100.0, 100.0, -5.0),
+        position: Vec3::new(100.0, 100.0, -7.0),
         color: Vec3::new(0.4, 1.0, 0.4),
     };
-
-    let test_tri = Box::new(Triangle {
-        corner_b: Vec3::new(4.0, 2.0, -4.0),
-        corner_a: Vec3::new(3.0, 2.0, -4.0),
-        corner_c: Vec3::new(3.0, 3.0, -4.0),
-        material: Box::new(Lambertian {
-            albedo: Vec3::new(0.9, 0.2, 0.2),
-        }),
-    });
 
     let lights = vec![light];
 
@@ -120,10 +111,10 @@ fn main() {
     assert!(cube.is_ok());
     let (models, _materials) = cube.unwrap();
 
-    let transl = Vec3::new(-5.0, 3.5, -7.0);
-    let scale = 50.0;
+    let bunny_trans = Vec3::new(6.5, -2.0, -12.0);
+    let bunny_scale = 45.0;
 
-    for (i, m) in models.iter().enumerate() {
+    for (_i, m) in models.iter().enumerate() {
         let mesh = &m.mesh;
         // Normals and texture coordinates are also loaded, but not printed in this example
         assert!(mesh.positions.len() % 3 == 0);
@@ -135,16 +126,18 @@ fn main() {
                 let z_idx = 3 * mesh.indices[3 * f + idx] + 2;
 
                 triangle_vertices[idx] = Vec3::new(
-                    mesh.positions[x_idx as usize] as f64 * scale,
-                    mesh.positions[y_idx as usize] as f64 * scale,
-                    mesh.positions[z_idx as usize] as f64 * scale,
+                    mesh.positions[x_idx as usize] as f64 * bunny_scale,
+                    mesh.positions[y_idx as usize] as f64 * bunny_scale,
+                    mesh.positions[z_idx as usize] as f64 * bunny_scale,
                 );
             }
             let tri = Box::new(Triangle {
-                corner_a: triangle_vertices[0] + transl,
-                corner_b: triangle_vertices[1] + transl,
-                corner_c: triangle_vertices[2] + transl,
-                material: Box::new(Lambertian {  albedo: Vec3::new(0.5, 0.2, 0.2)}),
+                corner_a: triangle_vertices[0] + bunny_trans,
+                corner_b: triangle_vertices[1] + bunny_trans,
+                corner_c: triangle_vertices[2] + bunny_trans,
+                material: Box::new(Lambertian {
+                    albedo: Vec3::new(0.7, 0.2, 0.2),
+                }),
             });
             model_elements.push(tri);
         }
@@ -153,7 +146,7 @@ fn main() {
     println!("Loaded {} triangles!", model_elements.len());
 
     let mut elements: Vec<Box<dyn Intersectable + Sync>> =
-        vec![matte_sphere, glass_sphere, metal_sphere, test_tri, earth];
+        vec![matte_sphere, glass_sphere, metal_sphere, earth];
 
     elements.append(&mut model_elements);
 

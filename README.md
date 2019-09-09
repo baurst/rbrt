@@ -6,7 +6,6 @@ Cube:
 https://people.sc.fsu.edu/~jburkardt/data/obj/cube.obj
 
 ## To Dos:
-* !! fix weird camera perspective 
 * refactor triangle conversion of obj file to lib
 * configure scene via yaml or json
 * optimize: use bounding box for large object intersection 
