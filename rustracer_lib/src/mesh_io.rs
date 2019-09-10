@@ -34,9 +34,9 @@ pub fn load_mesh_from_file(
                 );
             }
             let tri = Box::new(Triangle {
-                corner_a: triangle_vertices[0] + translation,
-                corner_b: triangle_vertices[1] + translation,
-                corner_c: triangle_vertices[2] + translation,
+                corners: [triangle_vertices[0] + translation,
+                triangle_vertices[1] + translation,
+                triangle_vertices[2] + translation],
                 material: Box::new(Lambertian {
                     albedo: Vec3::new(0.7, 0.2, 0.2),
                 }),
