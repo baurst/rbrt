@@ -11,6 +11,34 @@ use rustracer_lib::sphere::Sphere;
 use rustracer_lib::vec3::Vec3;
 use rustracer_lib::{Intersectable, Light, Scene};
 
+
+/// Axis aligned Bounding Box
+pub struct BoundingBox{
+    pub lower_bound: Vec3,
+    pub upper_bound: Vec3,
+}
+
+pub fn compute_max_min_3d(triangle_mesh: Vec<Triangle>) -> (Vec3, Vec3){
+
+    let mut lower_bound_tmp = Vec3::new(-std::f64::MAX, -std::f64::MAX, -std::f64::MAX);
+    let mut upper_bound_tmp = Vec3::new(std::f64::MAX, std::f64::MAX, std::f64::MAX);
+
+
+
+    (Vec3::zero(),Vec3::zero())
+}
+
+
+
+
+
+
+
+
+
+
+
+
 fn main() {
     let app = App::new("rustracer")
         .version("0.1")
@@ -72,7 +100,7 @@ fn main() {
     let is_dry_run = match matches.occurrences_of("dry_run") {
         0 => false,
         1 | _ => {
-            println!("Dry run, fast but no meshes!");
+            println!("Rendering a dry run, fast but no meshes!");
             true
         }
     };
@@ -123,9 +151,9 @@ fn main() {
         bunny_mesh = rustracer_lib::mesh_io::load_mesh_from_file(fp, bunny_trans, bunny_scale);
     } else {
         let test_tri = Box::new(Triangle {
-            corner_a: Vec3::new(1.0, 0.0, 0.0),
-            corner_b: Vec3::new(1.0, 1.0, 0.0),
-            corner_c: Vec3::new(0.0, 0.0, 0.0),
+            corner_a: Vec3::new(-1.0, 1.0, -7.0),
+            corner_b: Vec3::new(1.0, 2.0, -7.0),
+            corner_c: Vec3::new(0.0, 1.0, -7.0),
             material: Box::new(Lambertian {
                 albedo: Vec3::new(0.5, 0.2, 0.2),
             }),

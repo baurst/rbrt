@@ -19,7 +19,6 @@ pub fn load_mesh_from_file(
 
     for (_i, m) in models.iter().enumerate() {
         let mesh = &m.mesh;
-        // Normals and texture coordinates are also loaded, but not printed in this example
         assert!(mesh.positions.len() % 3 == 0);
         let mut triangle_vertices: Vec<Vec3> = vec![Vec3::zero(); 3];
         for f in 0..mesh.indices.len() / 3 {
