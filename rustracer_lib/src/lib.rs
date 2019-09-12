@@ -66,6 +66,20 @@ impl Scene {
                 }
             }
         }
+
+        for mesh in &self.triangle_meshes {
+            let hit_info_op = mesh.intersect_with_ray(&ray);
+            if hit_info_op.is_some() {
+                let hit_rec = hit_info_op.unwrap();
+                if hit_rec.dist_from_ray_orig < closest_so_far
+                    && hit_rec.dist_from_ray_orig > min_dist
+                    && hit_rec.dist_from_ray_orig < max_dist
+                {
+                    closest_so_far = hit_rec.dist_from_ray_orig;
+                    closest_hit_rec = Some(hit_rec);
+                }
+            }
+        }
         return closest_hit_rec;
     }
 }

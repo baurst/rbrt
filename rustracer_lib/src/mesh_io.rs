@@ -4,12 +4,22 @@ use std::path::Path;
 use crate::lambertian::Lambertian;
 use crate::triangle::Triangle;
 use crate::vec3::Vec3;
-use crate::Intersectable;
+use crate::{HitInformation, Intersectable, Ray, RayScattering};
+use std::cmp::Ordering;
 
 /// Axis aligned Bounding Box
 pub struct BoundingBox {
     pub lower_bound: Vec3,
     pub upper_bound: Vec3,
+}
+
+// just for better readabilty
+pub fn max(a: f64, b: f64) -> f64 {
+    return a.max(b);
+}
+
+pub fn min(a: f64, b: f64) -> f64 {
+    return a.min(b);
 }
 
 impl BoundingBox {
@@ -18,6 +28,29 @@ impl BoundingBox {
             lower_bound: lower_bound,
             upper_bound: upper_bound,
         };
+    }
+    /// see https://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms
+    pub fn hit(&self, ray: &Ray) -> bool {
+        let t1 = (self.lower_bound.x - ray.origin.x) / ray.direction.x;
+        let t2 = (self.upper_bound.x - ray.origin.x) / ray.direction.x;
+        let t3 = (self.lower_bound.y - ray.origin.y) / ray.direction.y;
+        let t4 = (self.upper_bound.y - ray.origin.y) / ray.direction.y;
+        let t5 = (self.lower_bound.z - ray.origin.z) / ray.direction.z;
+        let t6 = (self.upper_bound.z - ray.origin.z) / ray.direction.z;
+
+        let tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6));
+        let tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6));
+
+        // if tmax < 0, ray (line) is intersecting AABB, but the whole AABB is behind us
+        if tmax < 0.0 {
+            return false;
+        }
+
+        // if tmin > tmax, ray doesn't intersect AABB
+        if tmin > tmax {
+            return false;
+        }
+        return true;
     }
 }
 
@@ -109,4 +142,35 @@ pub fn load_mesh_from_file(filepath: &str, translation: Vec3, scale: f64) -> Vec
         filepath
     );
     return model_elements;
+}
+
+impl Intersectable for TriangleMesh {
+    fn intersect_with_ray<'a>(&'a self, ray: &Ray) -> Option<HitInformation> {
+        // first check if bounding box is hit
+        if !self.bbox.hit(ray) {
+            return None;
+        }
+        // if bounding box is hit, check all triangles
+        let mut closest_hit_rec = None;
+        let mut closest_so_far = std::f64::MAX;
+
+        let min_dist = 0.001;
+        let max_dist = 2000.0;
+
+        for triangle in &self.triangles {
+            let hit_info_op = triangle.intersect_with_ray(&ray);
+            if hit_info_op.is_some() {
+                let hit_rec = hit_info_op.unwrap();
+                if hit_rec.dist_from_ray_orig < closest_so_far
+                    && hit_rec.dist_from_ray_orig > min_dist
+                    && hit_rec.dist_from_ray_orig < max_dist
+                {
+                    closest_so_far = hit_rec.dist_from_ray_orig;
+                    closest_hit_rec = Some(hit_rec);
+                }
+            }
+        }
+
+        return closest_hit_rec;
+    }
 }
