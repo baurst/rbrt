@@ -19,7 +19,12 @@ impl Triangle {
 }
 
 impl Intersectable for Triangle {
-    fn intersect_with_ray<'a>(&'a self, ray: &Ray) -> Option<HitInformation> {
+    fn intersect_with_ray<'a>(
+        &'a self,
+        ray: &Ray,
+        min_dist: f64,
+        max_dist: f64,
+    ) -> Option<HitInformation> {
         let eps = 0.0000001;
         let edge1 = self.corners[1] - self.corners[0];
         let edge2 = self.corners[2] - self.corners[0];
@@ -44,12 +49,18 @@ impl Intersectable for Triangle {
         if t > eps
         // ray intersection
         {
-            return Some(HitInformation {
-                hit_point: ray.point_at(t),
-                hit_normal: self.get_normal(),
-                hit_material: &*self.material,
-                dist_from_ray_orig: t,
-            });
+            let hit_point = ray.point_at(t);
+            let dist_from_ray_orig = (ray.origin - hit_point).length();
+            if dist_from_ray_orig < min_dist || dist_from_ray_orig > max_dist {
+                return None;
+            } else {
+                return Some(HitInformation {
+                    hit_point: hit_point,
+                    hit_normal: self.get_normal(),
+                    hit_material: &*self.material,
+                    dist_from_ray_orig: dist_from_ray_orig,
+                });
+            }
         }
 
         return None;

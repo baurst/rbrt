@@ -17,8 +17,12 @@ impl Intersectable for Sphere {
     /// insert ray for p into sphere equation, then solve quadratic equation for t
     /// (o+td-c)(o+td-c)=r^2
     /// t1/2 = (-B +- sqrt(B^2 - 4AC))/(2A)
-    ///
-    fn intersect_with_ray<'a>(&'a self, ray: &Ray) -> Option<HitInformation> {
+    fn intersect_with_ray<'a>(
+        &'a self,
+        ray: &Ray,
+        min_dist: f64,
+        max_dist: f64,
+    ) -> Option<HitInformation> {
         let a = ray.direction.dot(&ray.direction);
         let l = ray.origin - self.center;
         let b = (ray.direction * 2.0).dot(&l);
@@ -43,20 +47,25 @@ impl Intersectable for Sphere {
                     return None; // both points on the ray are negative
                 }
             }
-
             let hit_point = ray.point_at(ray_param);
-            let hit_normal = hit_point - self.center;
-            let hit_info = HitInformation {
-                hit_normal: hit_normal,
-                hit_point: hit_point,
-                hit_material: &*self.material,
-                dist_from_ray_orig: (ray.origin - hit_point).length(),
-            };
-            if hit_point.z < 0.0 {
-                //println!("Encountered hit at {:?}", hit_point);
-                //assert!(false);
+            let dist_from_ray_orig = (ray.origin - hit_point).length();
+
+            if dist_from_ray_orig < min_dist || dist_from_ray_orig > max_dist {
+                return None;
+            } else {
+                let hit_normal = hit_point - self.center;
+                let hit_info = HitInformation {
+                    hit_normal: hit_normal,
+                    hit_point: hit_point,
+                    hit_material: &*self.material,
+                    dist_from_ray_orig: dist_from_ray_orig,
+                };
+                if hit_point.z < 0.0 {
+                    //println!("Encountered hit at {:?}", hit_point);
+                    //assert!(false);
+                }
+                return Some(hit_info);
             }
-            return Some(hit_info);
         }
     }
 }
