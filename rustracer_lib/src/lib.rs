@@ -5,6 +5,7 @@ extern crate rayon;
 pub mod dielectric;
 pub mod lambertian;
 pub mod mesh_io;
+use mesh_io::TriangleMesh;
 pub mod metal;
 pub mod ray;
 pub mod sphere;
@@ -43,6 +44,7 @@ pub struct Light {
 
 pub struct Scene {
     pub elements: Vec<Box<dyn Intersectable + Sync>>,
+    pub triangle_meshes: Vec<TriangleMesh>,
     pub lights: Vec<Light>,
 }
 

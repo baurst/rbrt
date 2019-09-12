@@ -11,33 +11,6 @@ use rustracer_lib::sphere::Sphere;
 use rustracer_lib::vec3::Vec3;
 use rustracer_lib::{Intersectable, Light, Scene};
 
-/// Axis aligned Bounding Box
-pub struct BoundingBox {
-    pub lower_bound: Vec3,
-    pub upper_bound: Vec3,
-}
-
-pub fn compute_max_min_3d(triangle_mesh: Vec<Triangle>) -> (Vec3, Vec3) {
-    let mut lower_bound_tmp = Vec3::new(std::f64::MAX, std::f64::MAX, std::f64::MAX);
-    let mut upper_bound_tmp = Vec3::new(-std::f64::MAX, -std::f64::MAX, -std::f64::MAX);
-/*
-    for tri in triangle_mesh {
-        if tri.corner_a.x < lower_bound_tmp.x {
-            lower_bound_tmp.x = tri.corner_a.x
-        }
-
-        if tri.corner_a.y < lower_bound_tmp.y {
-            lower_bound_tmp.y = tri.corner_a.y
-        }
-
-        if tri.corner_a.z < lower_bound_tmp.z {
-            lower_bound_tmp.z = tri.corner_a.z
-        }
-    }
-*/
-    (Vec3::zero(), Vec3::zero())
-}
-
 fn main() {
     let app = App::new("rustracer")
         .version("0.1")
@@ -142,28 +115,37 @@ fn main() {
 
     let lights = vec![light];
 
-    let mut bunny_mesh = vec![];
+    let mut loaded_meshes = vec![];
+    let mut test_tris: Vec<Box<dyn Intersectable + Sync>> = vec![];
     if !is_dry_run {
         let fp = "bunny.obj";
         let bunny_trans = Vec3::new(6.5, -2.0, -12.0);
         let bunny_scale = 45.0;
-        bunny_mesh = rustracer_lib::mesh_io::load_mesh_from_file(fp, bunny_trans, bunny_scale);
+        loaded_meshes.push(rustracer_lib::mesh_io::TriangleMesh::new(
+            fp,
+            bunny_trans,
+            bunny_scale,
+        ));
     } else {
         let test_tri = Box::new(Triangle {
-            corners: [Vec3::new(-1.0, 1.0, -7.0), Vec3::new(1.0, 2.0, -7.0),
-            Vec3::new(0.0, 1.0, -7.0)],
+            corners: [
+                Vec3::new(-1.0, 1.0, -7.0),
+                Vec3::new(1.0, 2.0, -7.0),
+                Vec3::new(0.0, 1.0, -7.0),
+            ],
             material: Box::new(Lambertian {
                 albedo: Vec3::new(0.5, 0.2, 0.2),
             }),
         });
-        bunny_mesh.push(test_tri);
+        test_tris.push(test_tri);
     }
+
     let mut elements: Vec<Box<dyn Intersectable + Sync>> =
         vec![matte_sphere, glass_sphere, metal_sphere, earth];
-
-    elements.append(&mut bunny_mesh);
+    elements.append(&mut test_tris);
 
     let scene = Scene {
+        triangle_meshes: loaded_meshes,
         elements: elements,
         lights: lights,
     };
