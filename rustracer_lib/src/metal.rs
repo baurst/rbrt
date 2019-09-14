@@ -17,21 +17,17 @@ impl RayScattering for Metal {
         scattered_ray: &mut Ray,
     ) -> bool {
         let scattered_ray_target = reflect(&incoming_ray.direction, &hit_info.hit_normal);
-        scattered_ray.direction = (scattered_ray_target.normalize()
+        scattered_ray.direction = (scattered_ray_target
             + self.fuzz * random_point_in_unit_sphere())
         .normalize();
         scattered_ray.origin = hit_info.hit_point;
         *attentuation = self.albedo;
-        // TODO FIX THIS, why does this sometimes not reflect!?
-        //let reflect = scattered_ray.direction.dot(&hit_info.hit_normal) > 0.0;
-        /*
-        if !reflect{
-            println!("Metal did not reflect ray!");
+        let reflect = scattered_ray.direction.dot(&hit_info.hit_normal) > 0.0;
+        if reflect{
+            return true;
         }
         else{
-            println!("Metal did reflect ray!");
+            return false;
         }
-        */
-        return true;
     }
 }

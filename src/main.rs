@@ -94,11 +94,11 @@ fn main() {
     });
 
     let metal_sphere = Box::new(Sphere {
-        center: Vec3::new(-1.0, 1.5, -15.0),
+        center: Vec3::new(-1.0, 2.8, -15.0),
         radius: 3.0,
         material: Box::new(Metal {
             albedo: Vec3::new(0.8, 0.8, 0.8),
-            fuzz: 0.05,
+            fuzz: 0.005,
         }),
     });
 
