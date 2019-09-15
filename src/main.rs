@@ -11,6 +11,20 @@ use rustracer_lib::sphere::Sphere;
 use rustracer_lib::vec3::Vec3;
 use rustracer_lib::{Intersectable, Light, Scene};
 
+
+pub struct TriangleMeshBlueprint {
+    pub obj_filepath: String,
+    pub scale: f64,
+    pub translation: Vec3,
+    pub material: Box<dyn rustracer_lib::materials::RayScattering>,
+}
+
+pub struct SceneBlueprint {
+    pub sphere: Vec<Box<Sphere>>,
+    pub triangle_meshes: Vec<Box<TriangleMeshBlueprint>>,
+    pub lights: Vec<Light>,
+}
+
 fn main() {
     let app = App::new("rustracer")
         .version("0.1")
