@@ -12,7 +12,7 @@ pub struct BoundingBox {
     pub upper_bound: Vec3,
 }
 
-// just for better readabilty
+/// just for better readabilty
 pub fn max(a: f64, b: f64) -> f64 {
     return a.max(b);
 }

@@ -103,9 +103,9 @@ fn main() {
     });
 
     let glass_sphere = Box::new(Sphere {
-        center: Vec3::new(0.5, 1.5, -9.0),
-        radius: 2.0,
-        material: Box::new(Dielectric { ref_idx: 1.4 }),
+        center: Vec3::new(1.0, 1.0, -9.0),
+        radius: 1.7,
+        material: Box::new(Dielectric { ref_idx: 1.8 }),
     });
 
     let light = Light {
@@ -119,7 +119,7 @@ fn main() {
     let mut test_tris: Vec<Box<dyn Intersectable + Sync>> = vec![];
     if !is_dry_run {
         let fp = "bunny.obj";
-        let bunny_trans = Vec3::new(5.5, -2.0, -12.0);
+        let bunny_trans = Vec3::new(5.0, -2.0, -12.5);
         let bunny_scale = 45.0;
         loaded_meshes.push(rustracer_lib::mesh_io::TriangleMesh::new(
             fp,
