@@ -61,42 +61,54 @@ impl Intersectable for Sphere {
                     hit_material: &*self.material,
                     dist_from_ray_orig: dist_from_ray_orig,
                 };
-                if hit_point.z < 0.0 {
-                    //println!("Encountered hit at {:?}", hit_point);
-                    //assert!(false);
-                }
                 return Some(hit_info);
             }
         }
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use super::{Sphere, Ray, Vec3};
+    use super::{Ray, Sphere, Vec3};
     use crate::metal::Metal;
     use crate::Intersectable;
     // dont need Material here, use Option?
     #[test]
     fn test_sphere_intersection() {
+        // Camera looks onto sphere from front
         let test_sphere = Sphere {
-        center: Vec3::new(0.0, 0.0, -10.0),
-        radius: 1.0,
-        material: Box::new(Metal {
-            albedo: Vec3::new(0.8, 0.8, 0.8),
-            fuzz: 0.005,
-        }),
-    };
-    let test_ray = Ray{origin: Vec3::new(0.0,0.0,0.0), direction: Vec3::new(0.0,0.0,-1.0)};
-    
-    let hit_info = test_sphere.intersect_with_ray(&test_ray, 0.001, 1000.0);
+            center: Vec3::new(0.0, 0.0, -10.0),
+            radius: 1.0,
+            material: Box::new(Metal {
+                albedo: Vec3::new(0.8, 0.8, 0.8),
+                fuzz: 0.005,
+            }),
+        };
+        let test_ray = Ray {
+            origin: Vec3::new(0.0, 0.0, 0.0),
+            direction: Vec3::new(0.0, 0.0, -1.0),
+        };
 
-    assert!(hit_info.is_some());
-    
-    let hit_info = hit_info.unwrap();
-    assert_eq!(hit_info.hit_point, Vec3::new(0.0,0.0,-9.0));
-    assert_eq!(hit_info.hit_normal, Vec3::new(0.0,0.0,1.0));
+        let hit_info = test_sphere.intersect_with_ray(&test_ray, 0.001, 1000.0);
 
+        assert!(hit_info.is_some());
+
+        let hit_info = hit_info.unwrap();
+        assert_eq!(hit_info.hit_point, Vec3::new(0.0, 0.0, -9.0));
+        assert_eq!(hit_info.hit_normal, Vec3::new(0.0, 0.0, 1.0));
+
+        // ray hits sphere from behind
+        let test_ray = Ray {
+            origin: Vec3::new(0.0, 0.0, -15.0),
+            direction: Vec3::new(0.0, 0.0, 1.0),
+        };
+
+        let hit_info = test_sphere.intersect_with_ray(&test_ray, 0.001, 1000.0);
+
+        assert!(hit_info.is_some());
+
+        let hit_info = hit_info.unwrap();
+        assert_eq!(hit_info.hit_point, Vec3::new(0.0, 0.0, -11.0));
+        assert_eq!(hit_info.hit_normal, Vec3::new(0.0, 0.0, -1.0));
     }
 }

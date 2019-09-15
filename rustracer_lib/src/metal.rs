@@ -17,16 +17,14 @@ impl RayScattering for Metal {
         scattered_ray: &mut Ray,
     ) -> bool {
         let scattered_ray_target = reflect(&incoming_ray.direction, &hit_info.hit_normal);
-        scattered_ray.direction = (scattered_ray_target
-            + self.fuzz * random_point_in_unit_sphere())
-        .normalize();
+        scattered_ray.direction =
+            (scattered_ray_target + self.fuzz * random_point_in_unit_sphere()).normalize();
         scattered_ray.origin = hit_info.hit_point;
         *attentuation = self.albedo;
         let reflect = scattered_ray.direction.dot(&hit_info.hit_normal) > 0.0;
-        if reflect{
+        if reflect {
             return true;
-        }
-        else{
+        } else {
             return false;
         }
     }
