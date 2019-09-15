@@ -90,8 +90,10 @@ pub fn refract(
     return false;
 }
 
+#[cfg(test)]
 mod test {
-    use super::{refract, Vec3};
+    use crate::dielectric::refract;
+    use crate::vec3::Vec3;
 
     #[test]
     fn test_refraction() {

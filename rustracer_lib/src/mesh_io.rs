@@ -4,8 +4,7 @@ use std::path::Path;
 use crate::lambertian::Lambertian;
 use crate::triangle::Triangle;
 use crate::vec3::Vec3;
-use crate::{HitInformation, Intersectable, Ray, RayScattering};
-use std::cmp::Ordering;
+use crate::{HitInformation, Intersectable, Ray};
 
 /// Axis aligned Bounding Box
 pub struct BoundingBox {
