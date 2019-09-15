@@ -12,17 +12,19 @@ pub trait RayScattering {
 }
 
 pub fn random_point_in_unit_sphere() -> Vec3 {
-    let mut point = Vec3::new(
-        rand::random::<f64>(),
-        rand::random::<f64>(),
-        rand::random::<f64>(),
-    );
+    let mut point =
+        2.0 * Vec3::new(
+            rand::random::<f64>(),
+            rand::random::<f64>(),
+            rand::random::<f64>(),
+        ) - Vec3::new(1.0, 1.0, 1.0);
     while point.length() > 1.0 {
-        point = Vec3::new(
-            rand::random::<f64>(),
-            rand::random::<f64>(),
-            rand::random::<f64>(),
-        );
+        point =
+            2.0 * Vec3::new(
+                rand::random::<f64>(),
+                rand::random::<f64>(),
+                rand::random::<f64>(),
+            ) - Vec3::new(1.0, 1.0, 1.0);
     }
     return point;
 }

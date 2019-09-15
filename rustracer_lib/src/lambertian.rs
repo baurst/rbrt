@@ -16,7 +16,7 @@ impl RayScattering for Lambertian {
         scattered_ray: &mut Ray,
     ) -> bool {
         let scattered_ray_target_point =
-            hit_info.hit_point + hit_info.hit_normal + random_point_in_unit_sphere();
+            hit_info.hit_point + hit_info.hit_normal.normalize() + random_point_in_unit_sphere();
         scattered_ray.direction = (scattered_ray_target_point - hit_info.hit_point).normalize();
         scattered_ray.origin = hit_info.hit_point;
         *attentuation = self.albedo;
