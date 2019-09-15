@@ -99,6 +99,7 @@ pub fn compute_min_max_3d(triangle_mesh: Vec<Box<Triangle>>) -> (Vec<Box<Triangl
     (triangle_mesh, lower_bound_tmp, upper_bound_tmp)
 }
 
+/// Loads mesh from obj file, scales and translates it
 pub fn load_mesh_from_file(filepath: &str, translation: Vec3, scale: f64) -> Vec<Box<Triangle>> {
     let mut model_elements: Vec<Box<Triangle>> = Vec::new();
 

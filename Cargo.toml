@@ -1,8 +1,8 @@
 [package]
 name = "rustracer"
 version = "0.1.0"
-authors = ["Stefan Andreas Baur <stefan_andreas.baur@daimler.com>"]
-edition = "2018"
+authors = ["Stefan Baur <stefan.a.baur@gmail.com>"]
+edition = "2019"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

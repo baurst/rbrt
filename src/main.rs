@@ -103,8 +103,8 @@ fn main() {
     });
 
     let glass_sphere = Box::new(Sphere {
-        center: Vec3::new(1.0, 1.0, -9.0),
-        radius: 1.7,
+        center: Vec3::new(1.5, 0.8, -9.0),
+        radius: 1.5,
         material: Box::new(Dielectric { ref_idx: 1.8 }),
     });
 

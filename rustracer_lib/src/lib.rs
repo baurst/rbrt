@@ -138,7 +138,7 @@ pub fn render_scene(
                         z: 0.8,
                     };
 
-                    let mut color = Vec3::new(0.0, 0.0, 0.0);
+                    let mut color = Vec3::zero();
                     for _s in 0..num_samples {
                         let ray = cam.get_ray_through_pixel(row_idx, col_idx);
 
