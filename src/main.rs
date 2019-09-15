@@ -40,7 +40,7 @@ fn main() {
         .arg(
             Arg::with_name("dry_run")
                 .short("d")
-                .long("dry")
+                .long("dry-run")
                 .help("performs very fast dry run without expensive meshes"),
         )
         .arg(
@@ -103,7 +103,7 @@ fn main() {
     });
 
     let glass_sphere = Box::new(Sphere {
-        center: Vec3::new(2.75, 0.5, -9.0),
+        center: Vec3::new(2.75, 0.7, -9.0),
         radius: 1.5,
         material: Box::new(Dielectric { ref_idx: 1.4 }),
     });
