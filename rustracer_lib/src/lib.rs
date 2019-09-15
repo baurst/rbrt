@@ -117,8 +117,8 @@ pub fn render_scene(
 ) -> image::ImageBuffer<Rgb<u8>, Vec<u8>> {
     let cam_up = Vec3::new(0.0, 1.0, -0.4).normalize();
     let cam_look_at = Vec3::new(0.0, -0.3, -1.0).normalize();
-    let cam_pos = Vec3::new(0.0, 7.0, 4.0);
-    let focal_len_mm = 40.0;
+    let cam_pos = Vec3::new(0.0, 5.0, 4.0);
+    let focal_len_mm = 35.0;
 
     let cam = Camera::new(cam_pos, cam_look_at, cam_up, height, width, focal_len_mm);
 
