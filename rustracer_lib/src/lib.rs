@@ -4,8 +4,8 @@ extern crate rayon;
 
 pub mod dielectric;
 pub mod lambertian;
-pub mod mesh_io;
-use mesh_io::TriangleMesh;
+pub mod mesh;
+use mesh::TriangleMesh;
 pub mod metal;
 pub mod ray;
 pub mod sphere;

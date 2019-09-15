@@ -121,7 +121,7 @@ fn main() {
         let fp = "bunny.obj";
         let bunny_trans = Vec3::new(5.0, -2.0, -12.5);
         let bunny_scale = 45.0;
-        loaded_meshes.push(rustracer_lib::mesh_io::TriangleMesh::new(
+        loaded_meshes.push(rustracer_lib::mesh::TriangleMesh::new(
             fp,
             bunny_trans,
             bunny_scale,
