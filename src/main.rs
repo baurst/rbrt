@@ -4,6 +4,7 @@ extern crate rustracer_lib;
 use clap::{App, Arg};
 use rustracer_lib::dielectric::Dielectric;
 use rustracer_lib::lambertian::Lambertian;
+use rustracer_lib::materials::RayScattering;
 use rustracer_lib::mesh::TriangleMesh;
 use rustracer_lib::metal::Metal;
 use rustracer_lib::triangle::Triangle;
@@ -38,6 +39,27 @@ pub struct SceneBlueprint {
     pub sphere_blueprints: Vec<SphereBlueprint>,
 }
 
+fn create_material_from_description(
+    descr: &str,
+) -> Option<Box<dyn RayScattering + std::marker::Sync + 'static>> {
+    if descr.contains("metal") {
+        println!("Metal!");
+        return Some(Box::new(Metal {
+            albedo: Vec3::new(1.0, 1.0, 1.0),
+            fuzz: 0.005,
+        }));
+    } else if descr.contains("lambert") {
+        println!("Lambert!");
+        return Some(Box::new(Lambertian {
+            albedo: Vec3::new(1.0, 1.0, 1.0),
+        }));
+    } else if descr.contains("dielectric") {
+        println!("Glass!");
+        return Some(Box::new(Dielectric { ref_idx: 1.7 }));
+    }
+    return None;
+}
+
 fn load_blueprints_from_yaml_file(filepath: &str) -> SceneBlueprint {
     use std::fs::File;
     let f = File::open(filepath).unwrap();
@@ -54,14 +76,17 @@ fn parse_mesh_bp(mesh_bp: TriangleMeshBlueprint) -> Option<TriangleMesh> {
 }
 
 fn parse_sphere_bp(sphere_bp: SphereBlueprint) -> Option<Sphere> {
-    let sphere = Some(Sphere {
-        center: sphere_bp.center,
-        radius: sphere_bp.radius,
-        material: Box::new(Lambertian {
-            albedo: Vec3::new(0.8, 0.1, 0.1),
-        }),
-    });
-    return sphere;
+    let mat_box_op = create_material_from_description(&sphere_bp.material_description);
+
+    if mat_box_op.is_some() {
+        return Some(Sphere {
+            center: sphere_bp.center,
+            radius: sphere_bp.radius,
+            material: mat_box_op.unwrap(),
+        });
+    } else {
+        return None;
+    }
 }
 
 fn scene_from_scene_bp(scene_bp: SceneBlueprint) -> Scene {
@@ -81,8 +106,8 @@ fn scene_from_scene_bp(scene_bp: SceneBlueprint) -> Scene {
         }
     }
 
-    let mut elements = vec![];
-    let mut lights = vec![];
+    let elements = vec![];
+    let lights = vec![];
 
     return Scene {
         triangle_meshes: loaded_meshes,
