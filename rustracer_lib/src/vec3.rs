@@ -1,7 +1,8 @@
+use serde::{Deserialize, Serialize};
 use std::cmp::PartialEq;
 use std::ops::{Add, AddAssign, Mul, Sub};
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,

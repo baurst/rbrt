@@ -10,3 +10,5 @@ rand = "0.7.0"
 image = "0.12"                                                          
 rayon = "1.1.0"
 tobj = "0.1.10"
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.8"

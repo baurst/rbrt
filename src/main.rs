@@ -11,18 +11,38 @@ use rustracer_lib::sphere::Sphere;
 use rustracer_lib::vec3::Vec3;
 use rustracer_lib::{Intersectable, Light, Scene};
 
+//extern crate serde_yaml;
+//extern crate serde;
+use serde::{Deserialize, Serialize};
+use serde_yaml::from_reader;
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TriangleMeshBlueprint {
     pub obj_filepath: String,
     pub scale: f64,
     pub translation: Vec3,
-    pub material: Box<dyn rustracer_lib::materials::RayScattering>,
+    pub material_description: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SphereBlueprint {
+    pub radius: f64,
+    pub center: Vec3,
+    pub material_description: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct SceneBlueprint {
-    pub sphere: Vec<Box<Sphere>>,
-    pub triangle_meshes: Vec<Box<TriangleMeshBlueprint>>,
-    pub lights: Vec<Light>,
+    pub mesh_blueprints: Vec<TriangleMeshBlueprint>,
+    pub sphere_blueprints: Vec<SphereBlueprint>,
+}
+
+fn load_blueprints_from_yaml_file(filepath: &str) -> SceneBlueprint {
+    use std::fs::File;
+    let f = File::open(filepath).unwrap();
+    let scene_bp: SceneBlueprint = serde_yaml::from_reader(f).unwrap();
+    println!("{:?}", scene_bp);
+    return scene_bp;
 }
 
 fn main() {
@@ -50,6 +70,13 @@ fn main() {
                 .long("width")
                 .help("target image resolution width")
                 .default_value("800"),
+        )
+        .arg(
+            Arg::with_name("config")
+                .short("c")
+                .long("config")
+                .help("YAML file that specifies the scene layout.")
+                .default_value("./scenes/example.yaml"),
         )
         .arg(
             Arg::with_name("dry_run")
@@ -82,6 +109,46 @@ fn main() {
         .unwrap()
         .parse::<u32>()
         .expect("Please provide valid number of samples per pixel!");
+    let config_file: String = matches
+        .value_of("config")
+        .unwrap()
+        .parse::<String>()
+        .expect("Please specify a valid scene layout yaml file!");
+
+    //let blah = load_blueprints_from_yaml_file(&config_file);
+
+    let test_bp = SphereBlueprint {
+        radius: 6.0,
+        center: Vec3::new(3.0, 4.0, 5.0),
+        material_description: "material: lambertian; albedo: (1.0,0.0,0.0)".to_string(),
+    };
+
+    let test_bp2 = SphereBlueprint {
+        radius: 6.0,
+        center: Vec3::new(3.0, 4.0, 5.0),
+        material_description: "material: Metal, albedo: (1.0,0.0,0.0), fuzz: 0.005".to_string(),
+    };
+
+    let bunny_trans = Vec3::new(5.0, -2.0, -12.5);
+    let bunny_scale = 45.0;
+
+    let test_mesh = TriangleMeshBlueprint {
+        obj_filepath: "bunny.obj".to_string(),
+        scale: 45.0,
+        translation: Vec3::new(5.0, -2.0, -12.5),
+        material_description: "material: lambertian; albedo: (1.0,0.0,0.0)".to_string(),
+    };
+
+    let mesh_bps = vec![test_mesh];
+    let sphere_blueprints = vec![test_bp, test_bp2];
+
+    let sbp = SceneBlueprint {
+        mesh_blueprints: mesh_bps,
+        sphere_blueprints: sphere_blueprints,
+    };
+
+    let s = serde_yaml::to_string(&sbp);
+    println!("{:?}", s);
 
     let is_dry_run = match matches.occurrences_of("dry_run") {
         0 => false,
