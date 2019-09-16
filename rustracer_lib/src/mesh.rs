@@ -130,7 +130,7 @@ pub fn load_mesh_from_file(filepath: &str, translation: Vec3, scale: f64) -> Vec
                     triangle_vertices[2] + translation,
                 ],
                 material: Box::new(Lambertian {
-                    albedo: Vec3::new(0.7, 0.2, 0.2),
+                    albedo: Vec3::new(0.8, 0.1, 0.1),
                 }),
             });
             model_elements.push(tri);

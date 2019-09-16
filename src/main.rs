@@ -4,6 +4,7 @@ extern crate rustracer_lib;
 use clap::{App, Arg};
 use rustracer_lib::dielectric::Dielectric;
 use rustracer_lib::lambertian::Lambertian;
+use rustracer_lib::mesh::TriangleMesh;
 use rustracer_lib::metal::Metal;
 use rustracer_lib::triangle::Triangle;
 
@@ -43,6 +44,51 @@ fn load_blueprints_from_yaml_file(filepath: &str) -> SceneBlueprint {
     let scene_bp: SceneBlueprint = serde_yaml::from_reader(f).unwrap();
     println!("{:?}", scene_bp);
     return scene_bp;
+}
+
+fn parse_mesh_bp(mesh_bp: TriangleMeshBlueprint) -> Option<TriangleMesh> {
+    let transl = Vec3::zero();
+    let scale = 0.0;
+    let tri_mesh = Some(TriangleMesh::new(&mesh_bp.obj_filepath, transl, scale));
+    return tri_mesh;
+}
+
+fn parse_sphere_bp(sphere_bp: SphereBlueprint) -> Option<Sphere> {
+    let sphere = Some(Sphere {
+        center: sphere_bp.center,
+        radius: sphere_bp.radius,
+        material: Box::new(Lambertian {
+            albedo: Vec3::new(0.8, 0.1, 0.1),
+        }),
+    });
+    return sphere;
+}
+
+fn scene_from_scene_bp(scene_bp: SceneBlueprint) -> Scene {
+    let mut loaded_meshes = vec![];
+    for mesh_bp in scene_bp.mesh_blueprints {
+        let tri_mesh_op = parse_mesh_bp(mesh_bp);
+        if tri_mesh_op.is_some() {
+            loaded_meshes.push(tri_mesh_op.unwrap());
+        }
+    }
+
+    let mut scene_elements = vec![];
+    for sphere_bp in scene_bp.sphere_blueprints {
+        let sphere_op = parse_sphere_bp(sphere_bp);
+        if sphere_op.is_some() {
+            scene_elements.push(sphere_op.unwrap());
+        }
+    }
+
+    let mut elements = vec![];
+    let mut lights = vec![];
+
+    return Scene {
+        triangle_meshes: loaded_meshes,
+        elements: elements,
+        lights: lights,
+    };
 }
 
 fn main() {
@@ -147,8 +193,14 @@ fn main() {
         sphere_blueprints: sphere_blueprints,
     };
 
-    let s = serde_yaml::to_string(&sbp);
+    let s = serde_yaml::to_string(&sbp).unwrap();
     println!("{:?}", s);
+
+    let scene_bp_result: Result<SceneBlueprint, _> = serde_yaml::from_str(&s);
+    let scene_bp = scene_bp_result.unwrap(); // make this nice!
+    let scene = scene_from_scene_bp(scene_bp);
+
+    // todo: create scene from scene bp
 
     let is_dry_run = match matches.occurrences_of("dry_run") {
         0 => false,
