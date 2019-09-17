@@ -16,7 +16,6 @@ use rustracer_lib::{Intersectable, Light, Scene};
 use std::fs::File;
 use std::io::Write;
 
-
 //extern crate serde_yaml;
 //extern crate serde;
 use serde::{Deserialize, Serialize};
@@ -79,7 +78,8 @@ fn get_scalar_from_descr(descr: &str, scalar_name: &str) -> Option<f64> {
         .last()
         .unwrap()
         .replace(&['(', ')', ' '][..], "")
-        .parse::<f64>().ok();
+        .parse::<f64>()
+        .ok();
     return relevant_parts;
 }
 
@@ -87,40 +87,50 @@ fn create_material_from_description(
     descr: &str,
 ) -> Option<Box<dyn RayScattering + std::marker::Sync + 'static>> {
     if descr.contains("metal") {
-        println!("Metal!");
         let albedo_vec_op = get_albedo_vec_from_descr(descr);
         let roughness_op = get_scalar_from_descr(descr, &"roughness".to_string());
 
-        if albedo_vec_op.is_some() {
+        if albedo_vec_op.is_some() & roughness_op.is_some() {
+            println!("Metal!");
             return Some(Box::new(Metal {
                 albedo: albedo_vec_op.unwrap(),
                 roughness: roughness_op.unwrap(),
             }));
         }
     } else if descr.contains("lambert") {
-        println!("Lambert!");
-        return Some(Box::new(Lambertian {
-            albedo: Vec3::new(1.0, 1.0, 1.0),
-        }));
+        let albedo_vec_op = get_albedo_vec_from_descr(descr);
+
+        if albedo_vec_op.is_some() {
+            println!("Lambert!");
+            return Some(Box::new(Lambertian {
+                albedo: albedo_vec_op.unwrap(), // FIX ME
+            }));
+        }
     } else if descr.contains("dielectric") {
-        println!("Glass!");
-        return Some(Box::new(Dielectric { ref_idx: 1.7 }));
+        let ref_idx_op = get_scalar_from_descr(descr, &"ref_idx".to_string());
+        if ref_idx_op.is_some() {
+            println!("Glass!");
+            return Some(Box::new(Dielectric {
+                ref_idx: ref_idx_op.unwrap(),
+            }));
+        }
     }
     return None;
 }
 
 fn load_blueprints_from_yaml_file(filepath: &str) -> SceneBlueprint {
-    use std::fs::File;
     let f = File::open(filepath).unwrap();
     let scene_bp: SceneBlueprint = serde_yaml::from_reader(f).unwrap();
-    println!("{:?}", scene_bp);
+    //println!("{:?}", scene_bp);
     return scene_bp;
 }
 
 fn parse_mesh_bp(mesh_bp: TriangleMeshBlueprint) -> Option<TriangleMesh> {
-    let transl = Vec3::zero();
-    let scale = 0.0;
-    let tri_mesh = Some(TriangleMesh::new(&mesh_bp.obj_filepath, transl, scale));
+    let _mat_box_op = create_material_from_description(&mesh_bp.material_description);
+
+    println!("{:?}", mesh_bp);
+
+    let tri_mesh = Some(TriangleMesh::new(&mesh_bp.obj_filepath, mesh_bp.translation, mesh_bp.scale));
     return tri_mesh;
 }
 
@@ -147,7 +157,9 @@ fn scene_from_scene_bp(scene_bp: SceneBlueprint) -> Scene {
         }
     }
 
-    let mut scene_elements : Vec<std::boxed::Box<(dyn rustracer_lib::Intersectable + std::marker::Sync + 'static)>> = vec![];
+    let mut scene_elements: Vec<
+        std::boxed::Box<(dyn rustracer_lib::Intersectable + std::marker::Sync + 'static)>,
+    > = vec![];
     for sphere_bp in scene_bp.sphere_blueprints {
         let sphere_op = parse_sphere_bp(sphere_bp);
         if sphere_op.is_some() {
@@ -379,7 +391,7 @@ mod tests {
         assert_eq!(albedo.unwrap(), Vec3::new(1.0, 0.0, 0.0));
     }
     #[test]
-    fn test_get_ref_idx(){
+    fn test_get_ref_idx() {
         let material_description =
             "material: dielectric; albedo: (1.0,0.0,0.0); ref_idx: 1.7".to_string();
         let ref_idx_name = "ref_idx".to_string();

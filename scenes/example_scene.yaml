@@ -1,0 +1,39 @@
+---
+mesh_blueprints:
+  - obj_filepath: bunny.obj
+    scale: 45.0
+    translation:
+      x: 5.0
+      y: -1.8
+      z: -12.5
+    material_description: "material: lambertian; albedo: (1.0,0.0,0.0)"
+sphere_blueprints:
+# green earth
+  - radius: 1000.0 
+    center:
+      x: 0.0
+      y: -1000.0
+      z: -5.0
+    material_description: "material: lambertian; albedo: (0.02,0.2,0.02)"
+# matte blue sphere
+  - radius: 1.5
+    center:
+      x: -5.0
+      y: 1.5
+      z: -9.0
+    material_description: "material: lambert; albedo: (0.1, 0.1, 0.9)"
+# metal sphere
+  - radius: 3.0
+    center:
+      x: -2.5
+      y: 2.8
+      z: -15.0
+    material_description: "material: metal; albedo: (0.8, 0.8, 0.8); roughness: 0.005"
+# glass sphere
+  - radius: 1.5
+    center:
+      x: 1.5
+      y: 1.25
+      z: -9.0
+    material_description: "material: dielectric; ref_idx: 1.8"
+
