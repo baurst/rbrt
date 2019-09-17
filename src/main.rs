@@ -39,15 +39,61 @@ pub struct SceneBlueprint {
     pub sphere_blueprints: Vec<SphereBlueprint>,
 }
 
+fn get_albedo_vec_from_descr(descr: &str) -> Option<Vec3> {
+    let albedo_vec = descr
+        .split(";")
+        .filter(|s| s.contains("albedo"))
+        .last()
+        .unwrap()
+        .split(":")
+        .last()
+        .unwrap()
+        .replace(&['(', ')', ' '][..], "")
+        .split(",")
+        .filter_map(|s| s.parse::<f64>().ok())
+        .collect::<Vec<_>>();
+    println!("Got albedo {:?}", albedo_vec);
+
+    if albedo_vec.len() == 3 {
+        return Some(Vec3::new(albedo_vec[0], albedo_vec[1], albedo_vec[2]));
+    } else {
+        println!(
+            "An error occured while trying to figure out albedo vector from {}",
+            descr
+        );
+        return None;
+    }
+}
+
+fn get_scalar_from_descr(descr: &str, scalar_name: &str) -> Option<f64> {
+    let relevant_parts = descr
+        .split(";")
+        .last()
+        .unwrap()
+        .split(":")
+        .collect::<Vec<&str>>();
+    if &scalar_name == &relevant_parts[0] {
+        let scalar_value = relevant_parts[1].parse::<f64>().ok().unwrap();
+        return Some(scalar_value);
+    }
+
+    return None;
+}
+
 fn create_material_from_description(
     descr: &str,
 ) -> Option<Box<dyn RayScattering + std::marker::Sync + 'static>> {
     if descr.contains("metal") {
         println!("Metal!");
-        return Some(Box::new(Metal {
-            albedo: Vec3::new(1.0, 1.0, 1.0),
-            fuzz: 0.005,
-        }));
+        let albedo_vec_op = get_albedo_vec_from_descr(descr);
+        let fuzz_op = get_scalar_from_descr(descr, &"fuzz".to_string());
+
+        if albedo_vec_op.is_some() {
+            return Some(Box::new(Metal {
+                albedo: albedo_vec_op.unwrap(),
+                fuzz: fuzz_op.unwrap(),
+            }));
+        }
     } else if descr.contains("lambert") {
         println!("Lambert!");
         return Some(Box::new(Lambertian {
@@ -197,11 +243,8 @@ fn main() {
     let test_bp2 = SphereBlueprint {
         radius: 6.0,
         center: Vec3::new(3.0, 4.0, 5.0),
-        material_description: "material: Metal, albedo: (1.0,0.0,0.0), fuzz: 0.005".to_string(),
+        material_description: "material: metal; albedo: (1.0,0.0,0.0); fuzz: 0.005".to_string(),
     };
-
-    let bunny_trans = Vec3::new(5.0, -2.0, -12.5);
-    let bunny_scale = 45.0;
 
     let test_mesh = TriangleMeshBlueprint {
         obj_filepath: "bunny.obj".to_string(),
@@ -311,4 +354,27 @@ fn main() {
     let img_buf = rustracer_lib::render_scene(height, width, num_samples, scene);
 
     img_buf.save(target_image_path).unwrap();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{get_albedo_vec_from_descr, get_scalar_from_descr, Vec3};
+    #[test]
+    fn test_material_descr_parsing() {
+        let material_description = "material: lambertian; albedo: (1.0,0.0,0.0)".to_string();
+        let albedo = get_albedo_vec_from_descr(&material_description);
+        assert_eq!(albedo.unwrap(), Vec3::new(1.0, 0.0, 0.0));
+    }
+    #[test]
+    fn test_material_descr_parsing_w_scalar() {
+        let material_description =
+            "material: dielectric; albedo: (1.0,0.0,0.0); ref_idx: 1.7".to_string();
+        let albedo = get_albedo_vec_from_descr(&material_description);
+        assert_eq!(albedo.unwrap(), Vec3::new(1.0, 0.0, 0.0));
+
+        let ref_idx_name = "ref_idx".to_string();
+        let ref_idx = get_scalar_from_descr(&material_description, &ref_idx_name).unwrap();
+        assert_eq!(ref_idx, 1.7)
+    }
+
 }
