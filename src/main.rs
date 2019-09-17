@@ -38,13 +38,7 @@ fn main() {
                 .short("c")
                 .long("config")
                 .help("YAML file that specifies the scene layout.")
-                .default_value("./scene.yaml"),
-        )
-        .arg(
-            Arg::with_name("dry_run")
-                .short("d")
-                .long("dry-run")
-                .help("performs very fast dry run without expensive meshes"),
+                .default_value("scenes/example_scene.yaml"),
         )
         .arg(
             Arg::with_name("samples")
