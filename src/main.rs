@@ -13,6 +13,10 @@ use rustracer_lib::sphere::Sphere;
 use rustracer_lib::vec3::Vec3;
 use rustracer_lib::{Intersectable, Light, Scene};
 
+use std::fs::File;
+use std::io::Write;
+
+
 //extern crate serde_yaml;
 //extern crate serde;
 use serde::{Deserialize, Serialize};
@@ -85,12 +89,12 @@ fn create_material_from_description(
     if descr.contains("metal") {
         println!("Metal!");
         let albedo_vec_op = get_albedo_vec_from_descr(descr);
-        let fuzz_op = get_scalar_from_descr(descr, &"fuzz".to_string());
+        let roughness_op = get_scalar_from_descr(descr, &"roughness".to_string());
 
         if albedo_vec_op.is_some() {
             return Some(Box::new(Metal {
                 albedo: albedo_vec_op.unwrap(),
-                fuzz: fuzz_op.unwrap(),
+                roughness: roughness_op.unwrap(),
             }));
         }
     } else if descr.contains("lambert") {
@@ -242,7 +246,7 @@ fn main() {
     let test_bp2 = SphereBlueprint {
         radius: 6.0,
         center: Vec3::new(3.0, 4.0, 5.0),
-        material_description: "material: metal; albedo: (1.0,0.0,0.0); fuzz: 0.005".to_string(),
+        material_description: "material: metal; albedo: (1.0,0.0,0.0); roughness: 0.005".to_string(),
     };
 
     let test_mesh = TriangleMeshBlueprint {
@@ -261,10 +265,13 @@ fn main() {
     };
 
     let s = serde_yaml::to_string(&sbp).unwrap();
+    let mut file = File::create("/tmp/scene.yaml").unwrap();
+    file.write_all(s.as_bytes());
     println!("{:?}", s);
 
     let scene_bp_result: Result<SceneBlueprint, _> = serde_yaml::from_str(&s);
     let scene_bp = scene_bp_result.unwrap(); // make this nice!
+    
     let scene = scene_from_scene_bp(scene_bp);
 
     // todo: create scene from scene bp
@@ -298,7 +305,7 @@ fn main() {
         radius: 3.0,
         material: Box::new(Metal {
             albedo: Vec3::new(0.8, 0.8, 0.8),
-            fuzz: 0.005,
+            roughness: 0.005,
         }),
     });
 

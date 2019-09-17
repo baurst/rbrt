@@ -81,7 +81,7 @@ mod tests {
             radius: 1.0,
             material: Box::new(Metal {
                 albedo: Vec3::new(0.8, 0.8, 0.8),
-                fuzz: 0.005,
+                roughness: 0.005,
             }),
         };
         let test_ray = Ray {
