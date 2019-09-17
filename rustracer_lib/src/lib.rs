@@ -6,6 +6,7 @@ pub mod dielectric;
 pub mod lambertian;
 pub mod mesh;
 use mesh::TriangleMesh;
+pub mod blueprints;
 pub mod metal;
 pub mod ray;
 pub mod sphere;

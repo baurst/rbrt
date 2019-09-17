@@ -12,5 +12,3 @@ edition = "2018"
 rustracer_lib = {path = "rustracer_lib"}
 clap = "2"
 image = "0.12"
-serde_yaml = "0.8"
-serde = { version = "1.0", features = ["derive"] }
