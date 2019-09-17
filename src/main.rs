@@ -147,20 +147,19 @@ fn scene_from_scene_bp(scene_bp: SceneBlueprint) -> Scene {
         }
     }
 
-    let mut scene_elements = vec![];
+    let mut scene_elements : Vec<std::boxed::Box<(dyn rustracer_lib::Intersectable + std::marker::Sync + 'static)>> = vec![];
     for sphere_bp in scene_bp.sphere_blueprints {
         let sphere_op = parse_sphere_bp(sphere_bp);
         if sphere_op.is_some() {
-            scene_elements.push(sphere_op.unwrap());
+            scene_elements.push(Box::new(sphere_op.unwrap()));
         }
     }
 
-    let elements = vec![];
     let lights = vec![];
 
     return Scene {
         triangle_meshes: loaded_meshes,
-        elements: elements,
+        elements: scene_elements,
         lights: lights,
     };
 }
@@ -196,7 +195,7 @@ fn main() {
                 .short("c")
                 .long("config")
                 .help("YAML file that specifies the scene layout.")
-                .default_value("./scenes/example.yaml"),
+                .default_value("./scene.yaml"),
         )
         .arg(
             Arg::with_name("dry_run")
@@ -235,8 +234,9 @@ fn main() {
         .parse::<String>()
         .expect("Please specify a valid scene layout yaml file!");
 
-    //let blah = load_blueprints_from_yaml_file(&config_file);
+    let blah = load_blueprints_from_yaml_file(&config_file);
 
+    /*
     let test_bp = SphereBlueprint {
         radius: 6.0,
         center: Vec3::new(3.0, 4.0, 5.0),
@@ -271,9 +271,9 @@ fn main() {
 
     let scene_bp_result: Result<SceneBlueprint, _> = serde_yaml::from_str(&s);
     let scene_bp = scene_bp_result.unwrap(); // make this nice!
-    
-    let scene = scene_from_scene_bp(scene_bp);
-
+    */
+    let scene = scene_from_scene_bp(blah);
+    /*
     // todo: create scene from scene bp
 
     let is_dry_run = match matches.occurrences_of("dry_run") {
@@ -356,7 +356,7 @@ fn main() {
         elements: elements,
         lights: lights,
     };
-
+    */
     let img_buf = rustracer_lib::render_scene(height, width, num_samples, scene);
 
     img_buf.save(target_image_path).unwrap();
