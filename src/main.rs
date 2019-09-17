@@ -52,7 +52,7 @@ fn get_albedo_vec_from_descr(descr: &str) -> Option<Vec3> {
         .split(",")
         .filter_map(|s| s.parse::<f64>().ok())
         .collect::<Vec<_>>();
-    println!("Got albedo {:?}", albedo_vec);
+    // println!("Got albedo {:?}", albedo_vec);
 
     if albedo_vec.len() == 3 {
         return Some(Vec3::new(albedo_vec[0], albedo_vec[1], albedo_vec[2]));
@@ -68,16 +68,15 @@ fn get_albedo_vec_from_descr(descr: &str) -> Option<Vec3> {
 fn get_scalar_from_descr(descr: &str, scalar_name: &str) -> Option<f64> {
     let relevant_parts = descr
         .split(";")
+        .filter(|s| s.contains(&scalar_name))
         .last()
         .unwrap()
         .split(":")
-        .collect::<Vec<&str>>();
-    if &scalar_name == &relevant_parts[0] {
-        let scalar_value = relevant_parts[1].parse::<f64>().ok().unwrap();
-        return Some(scalar_value);
-    }
-
-    return None;
+        .last()
+        .unwrap()
+        .replace(&['(', ')', ' '][..], "")
+        .parse::<f64>().ok();
+    return relevant_parts;
 }
 
 fn create_material_from_description(
@@ -361,9 +360,9 @@ mod tests {
     use super::{get_albedo_vec_from_descr, get_scalar_from_descr, Vec3};
     #[test]
     fn test_material_descr_parsing() {
-        let material_description = "material: lambertian; albedo: (1.0,0.0,0.0)".to_string();
+        let material_description = "material: lambertian; albedo: (1.0,2.0,3.0)".to_string();
         let albedo = get_albedo_vec_from_descr(&material_description);
-        assert_eq!(albedo.unwrap(), Vec3::new(1.0, 0.0, 0.0));
+        assert_eq!(albedo.unwrap(), Vec3::new(1.0, 2.0, 3.0));
     }
     #[test]
     fn test_material_descr_parsing_w_scalar() {
@@ -371,7 +370,11 @@ mod tests {
             "material: dielectric; albedo: (1.0,0.0,0.0); ref_idx: 1.7".to_string();
         let albedo = get_albedo_vec_from_descr(&material_description);
         assert_eq!(albedo.unwrap(), Vec3::new(1.0, 0.0, 0.0));
-
+    }
+    #[test]
+    fn test_get_ref_idx(){
+        let material_description =
+            "material: dielectric; albedo: (1.0,0.0,0.0); ref_idx: 1.7".to_string();
         let ref_idx_name = "ref_idx".to_string();
         let ref_idx = get_scalar_from_descr(&material_description, &ref_idx_name).unwrap();
         assert_eq!(ref_idx, 1.7)
