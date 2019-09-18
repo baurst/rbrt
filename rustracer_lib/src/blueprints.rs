@@ -17,6 +17,7 @@ pub struct TriangleMeshBlueprint {
     pub obj_filepath: String,
     pub scale: f64,
     pub translation: Vec3,
+    pub material_type: String,
     pub material_description: String,
 }
 
@@ -24,6 +25,7 @@ pub struct TriangleMeshBlueprint {
 pub struct SphereBlueprint {
     pub radius: f64,
     pub center: Vec3,
+    pub material_type: String,
     pub material_description: String,
 }
 
@@ -74,11 +76,12 @@ fn get_scalar_from_descr(descr: &str, scalar_name: &str) -> Option<f64> {
 }
 
 fn create_material_from_description(
-    descr: &str,
+    mat_type: &str,
+    mat_descr: &str,
 ) -> Option<Box<dyn RayScattering + std::marker::Sync + 'static>> {
-    if descr.contains("metal") {
-        let albedo_vec_op = get_albedo_vec_from_descr(descr);
-        let roughness_op = get_scalar_from_descr(descr, &"roughness".to_string());
+    if mat_type.contains("metal") {
+        let albedo_vec_op = get_albedo_vec_from_descr(mat_descr);
+        let roughness_op = get_scalar_from_descr(mat_descr, &"roughness".to_string());
 
         if albedo_vec_op.is_some() & roughness_op.is_some() {
             return Some(Box::new(Metal {
@@ -86,16 +89,16 @@ fn create_material_from_description(
                 roughness: roughness_op.unwrap(),
             }));
         }
-    } else if descr.contains("lambert") {
-        let albedo_vec_op = get_albedo_vec_from_descr(descr);
+    } else if mat_type.contains("lambert") {
+        let albedo_vec_op = get_albedo_vec_from_descr(mat_descr);
 
         if albedo_vec_op.is_some() {
             return Some(Box::new(Lambertian {
                 albedo: albedo_vec_op.unwrap(),
             }));
         }
-    } else if descr.contains("dielectric") {
-        let ref_idx_op = get_scalar_from_descr(descr, &"ref_idx".to_string());
+    } else if mat_type.contains("dielectric") {
+        let ref_idx_op = get_scalar_from_descr(mat_descr, &"ref_idx".to_string());
         if ref_idx_op.is_some() {
             return Some(Box::new(Dielectric {
                 ref_idx: ref_idx_op.unwrap(),
@@ -112,7 +115,8 @@ pub fn load_blueprints_from_yaml_file(filepath: &str) -> SceneBlueprint {
 }
 
 fn parse_mesh_bp(mesh_bp: TriangleMeshBlueprint) -> Option<TriangleMesh> {
-    let _mat_box_op = create_material_from_description(&mesh_bp.material_description);
+    let _mat_box_op =
+        create_material_from_description(&mesh_bp.material_type, &mesh_bp.material_description);
 
     let tri_mesh = Some(TriangleMesh::new(
         &mesh_bp.obj_filepath,
@@ -123,7 +127,8 @@ fn parse_mesh_bp(mesh_bp: TriangleMeshBlueprint) -> Option<TriangleMesh> {
 }
 
 fn parse_sphere_bp(sphere_bp: SphereBlueprint) -> Option<Sphere> {
-    let mat_box_op = create_material_from_description(&sphere_bp.material_description);
+    let mat_box_op =
+        create_material_from_description(&sphere_bp.material_type, &sphere_bp.material_description);
 
     if mat_box_op.is_some() {
         return Some(Sphere {
@@ -169,21 +174,19 @@ mod tests {
     use super::{get_albedo_vec_from_descr, get_scalar_from_descr, Vec3};
     #[test]
     fn test_material_descr_parsing() {
-        let material_description = "material: lambertian; albedo: (1.0,2.0,3.0)".to_string();
+        let material_description = "albedo: (1.0,2.0,3.0)".to_string();
         let albedo = get_albedo_vec_from_descr(&material_description);
         assert_eq!(albedo.unwrap(), Vec3::new(1.0, 2.0, 3.0));
     }
     #[test]
     fn test_material_descr_parsing_w_scalar() {
-        let material_description =
-            "material: dielectric; albedo: (1.0,0.0,0.0); ref_idx: 1.7".to_string();
+        let material_description = "albedo: (1.0,0.0,0.0); ref_idx: 1.7".to_string();
         let albedo = get_albedo_vec_from_descr(&material_description);
         assert_eq!(albedo.unwrap(), Vec3::new(1.0, 0.0, 0.0));
     }
     #[test]
     fn test_get_ref_idx() {
-        let material_description =
-            "material: dielectric; albedo: (1.0,0.0,0.0); ref_idx: 1.7".to_string();
+        let material_description = "albedo: (1.0,0.0,0.0); ref_idx: 1.7".to_string();
         let ref_idx_name = "ref_idx".to_string();
         let ref_idx = get_scalar_from_descr(&material_description, &ref_idx_name).unwrap();
         assert_eq!(ref_idx, 1.7)
