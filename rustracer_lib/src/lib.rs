@@ -119,7 +119,7 @@ pub fn render_scene(
     let cam_up = Vec3::new(0.0, 1.0, -0.4).normalize();
     let cam_look_at = Vec3::new(0.0, -0.1, -1.0).normalize();
     let cam_pos = Vec3::new(0.0, 5.0, 4.0);
-    let focal_len_mm = 35.0;
+    let focal_len_mm = 35.0; // TODO: make camera configurable via yaml?
 
     let cam = Camera::new(cam_pos, cam_look_at, cam_up, height, width, focal_len_mm);
 

@@ -2,6 +2,8 @@
 This is yet another raytracer written in Rust. Coming from C++, Rusts ownership concepts (and easy way of managing dependencies and cross-platform builds) fascinated me and so I thought it could be fun to write a lightweight but capable raytracer to get to know the language better.
 The inspiration for this project came from the excellent book ['Raytracing In One Weekend'](https://raytracing.github.io) by Peter Shirley as well as ssloys awesome [tinyraytracer](https://github.com/ssloy/tinyraytracer).
 
+TODO: Add eyecatcher here!
+
 ## Try it out!
 ```bash
 git clone https://github.com/baurst/rustracer.git

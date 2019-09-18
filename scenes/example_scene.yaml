@@ -29,7 +29,7 @@ sphere_blueprints:
   - radius: 3.0
     center:
       x: -2.5
-      y: 2.8
+      y: 2.9
       z: -15.0
     material_type: "metal"
     material_description: "albedo: (0.8, 0.8, 0.8); roughness: 0.005"

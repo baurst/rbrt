@@ -18,7 +18,7 @@ pub struct TriangleMeshBlueprint {
     pub scale: f64,
     pub translation: Vec3,
     pub material_type: String,
-    pub material_description: String,
+    pub material_description: String, // TODO: albedo: Optional<Vec3>, ref_idx: Optional<f64>, roughness: Optional<f64>
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -105,6 +105,9 @@ fn create_material_from_description(
             }));
         }
     }
+    println!(
+        "Cannot figure out material_type from {}, material_type must be one of metal, lambertian or dielectric!", mat_type
+    );
     return None;
 }
 
