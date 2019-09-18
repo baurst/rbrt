@@ -18,7 +18,8 @@ pub struct TriangleMeshBlueprint {
     pub scale: f64,
     pub translation: Vec3,
     pub material_type: String,
-    pub material_description: String, // TODO: albedo: Optional<Vec3>, ref_idx: Optional<f64>, roughness: Optional<f64>
+    pub albedo: Option<Vec3>,
+    pub material_param: Option<f64>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -26,7 +27,8 @@ pub struct SphereBlueprint {
     pub radius: f64,
     pub center: Vec3,
     pub material_type: String,
-    pub material_description: String,
+    pub albedo: Option<Vec3>,
+    pub material_param: Option<f64>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -35,75 +37,24 @@ pub struct SceneBlueprint {
     pub sphere_blueprints: Vec<SphereBlueprint>,
 }
 
-fn get_albedo_vec_from_descr(descr: &str) -> Option<Vec3> {
-    let albedo_vec = descr
-        .split(";")
-        .filter(|s| s.contains("albedo"))
-        .last()
-        .unwrap()
-        .split(":")
-        .last()
-        .unwrap()
-        .replace(&['(', ')', ' '][..], "")
-        .split(",")
-        .filter_map(|s| s.parse::<f64>().ok())
-        .collect::<Vec<_>>();
-
-    if albedo_vec.len() == 3 {
-        return Some(Vec3::new(albedo_vec[0], albedo_vec[1], albedo_vec[2]));
-    } else {
-        println!(
-            "An error occured while trying to figure out albedo vector from {}",
-            descr
-        );
-        return None;
-    }
-}
-
-fn get_scalar_from_descr(descr: &str, scalar_name: &str) -> Option<f64> {
-    let relevant_parts = descr
-        .split(";")
-        .filter(|s| s.contains(&scalar_name))
-        .last()
-        .unwrap()
-        .split(":")
-        .last()
-        .unwrap()
-        .replace(&['(', ')', ' '][..], "")
-        .parse::<f64>()
-        .ok();
-    return relevant_parts;
-}
-
 fn create_material_from_description(
     mat_type: &str,
-    mat_descr: &str,
+    albedo: Option<Vec3>,
+    material_param: Option<f64>,
 ) -> Option<Box<dyn RayScattering + std::marker::Sync + 'static>> {
     if mat_type.contains("metal") {
-        let albedo_vec_op = get_albedo_vec_from_descr(mat_descr);
-        let roughness_op = get_scalar_from_descr(mat_descr, &"roughness".to_string());
-
-        if albedo_vec_op.is_some() & roughness_op.is_some() {
-            return Some(Box::new(Metal {
-                albedo: albedo_vec_op.unwrap(),
-                roughness: roughness_op.unwrap(),
-            }));
-        }
+        return Some(Box::new(Metal {
+            albedo: albedo.unwrap(),
+            roughness: material_param.unwrap(),
+        }));
     } else if mat_type.contains("lambert") {
-        let albedo_vec_op = get_albedo_vec_from_descr(mat_descr);
-
-        if albedo_vec_op.is_some() {
-            return Some(Box::new(Lambertian {
-                albedo: albedo_vec_op.unwrap(),
-            }));
-        }
+        return Some(Box::new(Lambertian {
+            albedo: albedo.unwrap(),
+        }));
     } else if mat_type.contains("dielectric") {
-        let ref_idx_op = get_scalar_from_descr(mat_descr, &"ref_idx".to_string());
-        if ref_idx_op.is_some() {
-            return Some(Box::new(Dielectric {
-                ref_idx: ref_idx_op.unwrap(),
-            }));
-        }
+        return Some(Box::new(Dielectric {
+            ref_idx: material_param.unwrap(),
+        }));
     }
     println!(
         "Cannot figure out material_type from {}, material_type must be one of metal, lambertian or dielectric!", mat_type
@@ -118,8 +69,11 @@ pub fn load_blueprints_from_yaml_file(filepath: &str) -> SceneBlueprint {
 }
 
 fn parse_mesh_bp(mesh_bp: TriangleMeshBlueprint) -> Option<TriangleMesh> {
-    let _mat_box_op =
-        create_material_from_description(&mesh_bp.material_type, &mesh_bp.material_description);
+    let _mat_box_op = create_material_from_description(
+        &mesh_bp.material_type,
+        mesh_bp.albedo,
+        mesh_bp.material_param,
+    );
 
     let tri_mesh = Some(TriangleMesh::new(
         &mesh_bp.obj_filepath,
@@ -130,8 +84,11 @@ fn parse_mesh_bp(mesh_bp: TriangleMeshBlueprint) -> Option<TriangleMesh> {
 }
 
 fn parse_sphere_bp(sphere_bp: SphereBlueprint) -> Option<Sphere> {
-    let mat_box_op =
-        create_material_from_description(&sphere_bp.material_type, &sphere_bp.material_description);
+    let mat_box_op = create_material_from_description(
+        &sphere_bp.material_type,
+        sphere_bp.albedo,
+        sphere_bp.material_param,
+    );
 
     if mat_box_op.is_some() {
         return Some(Sphere {
@@ -173,26 +130,4 @@ pub fn create_scene_from_scene_blueprint(scene_bp: SceneBlueprint) -> Scene {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{get_albedo_vec_from_descr, get_scalar_from_descr, Vec3};
-    #[test]
-    fn test_material_descr_parsing() {
-        let material_description = "albedo: (1.0,2.0,3.0)".to_string();
-        let albedo = get_albedo_vec_from_descr(&material_description);
-        assert_eq!(albedo.unwrap(), Vec3::new(1.0, 2.0, 3.0));
-    }
-    #[test]
-    fn test_material_descr_parsing_w_scalar() {
-        let material_description = "albedo: (1.0,0.0,0.0); ref_idx: 1.7".to_string();
-        let albedo = get_albedo_vec_from_descr(&material_description);
-        assert_eq!(albedo.unwrap(), Vec3::new(1.0, 0.0, 0.0));
-    }
-    #[test]
-    fn test_get_ref_idx() {
-        let material_description = "albedo: (1.0,0.0,0.0); ref_idx: 1.7".to_string();
-        let ref_idx_name = "ref_idx".to_string();
-        let ref_idx = get_scalar_from_descr(&material_description, &ref_idx_name).unwrap();
-        assert_eq!(ref_idx, 1.7)
-    }
-
-}
+mod tests {}
