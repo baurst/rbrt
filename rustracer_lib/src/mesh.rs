@@ -4,7 +4,7 @@ use std::path::Path;
 use crate::lambertian::Lambertian;
 use crate::triangle::Triangle;
 use crate::vec3::Vec3;
-use crate::{HitInformation, Intersectable, Ray};
+use crate::{HitInformation, Intersectable, Ray, RayScattering};
 
 /// Axis aligned Bounding Box
 pub struct BoundingBox {
@@ -56,6 +56,7 @@ impl BoundingBox {
 pub struct TriangleMesh {
     pub triangles: Vec<Box<Triangle>>,
     pub bbox: BoundingBox,
+    pub material: Option<Box<dyn RayScattering + Sync>>,
 }
 
 impl TriangleMesh {
@@ -66,6 +67,7 @@ impl TriangleMesh {
         return TriangleMesh {
             triangles: mesh,
             bbox: BoundingBox::new(lower_bound, upper_bound),
+            material: None,
         };
     }
 }
