@@ -2,7 +2,7 @@ extern crate tobj;
 use std::path::Path;
 
 use crate::lambertian::Lambertian;
-use crate::triangle::Triangle;
+use crate::triangle::BasicTriangle;
 use crate::vec3::Vec3;
 use crate::{HitInformation, Intersectable, Ray, RayScattering};
 
@@ -54,7 +54,7 @@ impl BoundingBox {
 }
 
 pub struct TriangleMesh {
-    pub triangles: Vec<Box<Triangle>>,
+    pub triangles: Vec<Box<BasicTriangle>>,
     pub bbox: BoundingBox,
     pub material: Option<Box<dyn RayScattering + Sync>>,
 }
@@ -72,7 +72,9 @@ impl TriangleMesh {
     }
 }
 
-pub fn compute_min_max_3d(triangle_mesh: Vec<Box<Triangle>>) -> (Vec<Box<Triangle>>, Vec3, Vec3) {
+pub fn compute_min_max_3d(
+    triangle_mesh: Vec<Box<BasicTriangle>>,
+) -> (Vec<Box<BasicTriangle>>, Vec3, Vec3) {
     let mut lower_bound_tmp = Vec3::new(std::f64::MAX, std::f64::MAX, std::f64::MAX);
     let mut upper_bound_tmp = Vec3::new(-std::f64::MAX, -std::f64::MAX, -std::f64::MAX);
     // wow that code stinks!
@@ -102,8 +104,12 @@ pub fn compute_min_max_3d(triangle_mesh: Vec<Box<Triangle>>) -> (Vec<Box<Triangl
 }
 
 /// Loads mesh from obj file, scales and translates it
-pub fn load_mesh_from_file(filepath: &str, translation: Vec3, scale: f64) -> Vec<Box<Triangle>> {
-    let mut model_elements: Vec<Box<Triangle>> = Vec::new();
+pub fn load_mesh_from_file(
+    filepath: &str,
+    translation: Vec3,
+    scale: f64,
+) -> Vec<Box<BasicTriangle>> {
+    let mut model_elements: Vec<Box<BasicTriangle>> = Vec::new();
 
     let loaded_mesh = tobj::load_obj(&Path::new(filepath));
     assert!(loaded_mesh.is_ok());
@@ -125,7 +131,7 @@ pub fn load_mesh_from_file(filepath: &str, translation: Vec3, scale: f64) -> Vec
                     mesh.positions[z_idx as usize] as f64 * scale,
                 );
             }
-            let tri = Box::new(Triangle {
+            let tri = Box::new(BasicTriangle {
                 corners: [
                     triangle_vertices[0] + translation,
                     triangle_vertices[1] + translation,

@@ -1,7 +1,7 @@
 use crate::vec3::Vec3;
 use crate::{HitInformation, Intersectable, Ray, RayScattering};
 
-pub struct Triangle {
+pub struct BasicTriangle {
     ///
     /// Convention: counter clockwise!
     ///
@@ -9,7 +9,7 @@ pub struct Triangle {
     pub material: Box<dyn RayScattering + Sync>,
 }
 
-impl Triangle {
+impl BasicTriangle {
     pub fn get_normal(&self) -> Vec3 {
         let edge1 = self.corners[1] - self.corners[0];
         let edge2 = self.corners[2] - self.corners[0];
@@ -18,7 +18,7 @@ impl Triangle {
     }
 }
 
-impl Intersectable for Triangle {
+impl Intersectable for BasicTriangle {
     fn intersect_with_ray<'a>(
         &'a self,
         ray: &Ray,
@@ -69,12 +69,12 @@ impl Intersectable for Triangle {
 
 #[cfg(test)]
 mod tests {
-    use super::{Triangle, Vec3};
+    use super::{BasicTriangle, Vec3};
     // dont need Material here, use Option?
     use crate::lambertian::Lambertian;
     #[test]
     fn test_triangle_normal() {
-        let test_tri = Box::new(Triangle {
+        let test_tri = Box::new(BasicTriangle {
             corners: [
                 Vec3::new(1.0, 0.0, 0.0),
                 Vec3::new(1.0, 1.0, 0.0),
@@ -90,7 +90,7 @@ mod tests {
 
         assert_eq!(normal, Vec3::new(0.0, 0.0, 1.0));
 
-        let test_tri = Box::new(Triangle {
+        let test_tri = Box::new(BasicTriangle {
             corners: [
                 Vec3::new(1.0, 0.0, 0.0),
                 Vec3::new(1.0, 0.0, 1.0),
