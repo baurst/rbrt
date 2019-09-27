@@ -56,18 +56,18 @@ impl BoundingBox {
 pub struct TriangleMesh {
     pub triangles: Vec<Box<BasicTriangle>>,
     pub bbox: BoundingBox,
-    pub material: Option<Box<dyn RayScattering + Sync>>,
+    pub _material: Option<Box<dyn RayScattering + Sync>>,
 }
 
 impl TriangleMesh {
-    pub fn new(filepath: &str, translation: Vec3, scale: f64) -> TriangleMesh {
-        let mesh = load_mesh_from_file(filepath, translation, scale);
+    pub fn new(filepath: &str, translation: Vec3, scale: f64, albedo: Vec3) -> TriangleMesh {
+        let mesh = load_mesh_from_file(filepath, translation, scale, albedo);
         let (mesh, lower_bound, upper_bound) = compute_min_max_3d(mesh);
 
         return TriangleMesh {
             triangles: mesh,
             bbox: BoundingBox::new(lower_bound, upper_bound),
-            material: None,
+            _material: None,
         };
     }
 }
@@ -108,6 +108,7 @@ pub fn load_mesh_from_file(
     filepath: &str,
     translation: Vec3,
     scale: f64,
+    albedo: Vec3,
 ) -> Vec<Box<BasicTriangle>> {
     let mut model_elements: Vec<Box<BasicTriangle>> = Vec::new();
 
@@ -138,7 +139,7 @@ pub fn load_mesh_from_file(
                     triangle_vertices[2] + translation,
                 ],
                 material: Box::new(Lambertian {
-                    albedo: Vec3::new(0.8, 0.1, 0.1), // TODO: make this configurable!
+                    albedo: albedo, // TODO: make this configurable!
                 }),
             });
             model_elements.push(tri);

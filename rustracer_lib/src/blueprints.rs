@@ -75,10 +75,20 @@ fn parse_mesh_bp(mesh_bp: TriangleMeshBlueprint) -> Option<TriangleMesh> {
         mesh_bp.material_param,
     );
 
+    let albedo = match mesh_bp.albedo {
+        Some(content) => content,
+        None => {
+            panic!(
+                "Meshes don't support anything but lambertians right now, please provide albedo!"
+            );
+        }
+    };
+
     let tri_mesh = Some(TriangleMesh::new(
         &mesh_bp.obj_filepath,
         mesh_bp.translation,
         mesh_bp.scale,
+        albedo,
     ));
     return tri_mesh;
 }
