@@ -4,3 +4,4 @@ Cargo.lock
 *.png
 *.obj
 *.mtl
+perf*

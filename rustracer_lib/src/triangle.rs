@@ -6,16 +6,27 @@ pub struct BasicTriangle {
     /// Convention: counter clockwise!
     ///
     pub corners: [Vec3; 3],
+    pub normal: Vec3,
+    pub edges: [Vec3; 2],
     pub material: Box<dyn RayScattering + Sync>,
 }
 
 impl BasicTriangle {
-    pub fn get_normal(&self) -> Vec3 {
-        let edge1 = self.corners[1] - self.corners[0];
-        let edge2 = self.corners[2] - self.corners[0];
-        let normal = edge1.cross_product(&edge2).normalize();
-        return normal;
+    pub fn new(corners: [Vec3; 3], material: Box<dyn RayScattering + Sync>) -> BasicTriangle {
+        BasicTriangle {
+            corners: corners,
+            normal: get_triangle_normal(corners),
+            material: material,
+            edges: [corners[1] - corners[0], corners[2] - corners[0]],
+        }
     }
+}
+
+pub fn get_triangle_normal(corners: [Vec3; 3]) -> Vec3 {
+    let edge1 = corners[1] - corners[0];
+    let edge2 = corners[2] - corners[0];
+    let normal = edge1.cross_product(&edge2).normalize();
+    return normal;
 }
 
 impl Intersectable for BasicTriangle {
@@ -26,10 +37,8 @@ impl Intersectable for BasicTriangle {
         max_dist: f64,
     ) -> Option<HitInformation> {
         let eps = 0.0000001;
-        let edge1 = self.corners[1] - self.corners[0];
-        let edge2 = self.corners[2] - self.corners[0];
-        let h = ray.direction.cross_product(&edge2);
-        let a = edge1.dot(&h);
+        let h = ray.direction.cross_product(&self.edges[1]);
+        let a = self.edges[0].dot(&h);
         if -eps < a && a < eps {
             return None;
         }
@@ -39,13 +48,13 @@ impl Intersectable for BasicTriangle {
         if u < 0.0 || u > 1.0 {
             return None;
         }
-        let q = s.cross_product(&edge1);
+        let q = s.cross_product(&self.edges[0]);
         let v = f * ray.direction.dot(&q);
         if v < 0.0 || u + v > 1.0 {
             return None;
         }
         // At this stage we can compute t to find out where the intersection point is on the line.
-        let t = f * edge2.dot(&q);
+        let t = f * self.edges[1].dot(&q);
         if t > eps
         // ray intersection
         {
@@ -56,7 +65,7 @@ impl Intersectable for BasicTriangle {
             } else {
                 return Some(HitInformation {
                     hit_point: hit_point,
-                    hit_normal: self.get_normal(),
+                    hit_normal: self.normal,
                     hit_material: &*self.material,
                     dist_from_ray_orig: dist_from_ray_orig,
                 });
@@ -74,35 +83,30 @@ mod tests {
     use crate::lambertian::Lambertian;
     #[test]
     fn test_triangle_normal() {
-        let test_tri = Box::new(BasicTriangle {
-            corners: [
+        let test_tri = Box::new(BasicTriangle::new(
+            [
                 Vec3::new(1.0, 0.0, 0.0),
                 Vec3::new(1.0, 1.0, 0.0),
                 Vec3::new(0.0, 0.0, 0.0),
             ],
-
-            material: Box::new(Lambertian {
+            Box::new(Lambertian {
                 albedo: Vec3::new(0.5, 0.2, 0.2),
             }),
-        });
+        ));
 
-        let normal = test_tri.get_normal();
+        assert_eq!(test_tri.normal, Vec3::new(0.0, 0.0, 1.0));
 
-        assert_eq!(normal, Vec3::new(0.0, 0.0, 1.0));
-
-        let test_tri = Box::new(BasicTriangle {
-            corners: [
+        let test_tri = Box::new(BasicTriangle::new(
+            [
                 Vec3::new(1.0, 0.0, 0.0),
                 Vec3::new(1.0, 0.0, 1.0),
                 Vec3::new(0.0, 1.0, 0.0),
             ],
-            material: Box::new(Lambertian {
+            Box::new(Lambertian {
                 albedo: Vec3::new(0.5, 0.2, 0.2),
             }),
-        });
+        ));
 
-        let normal = test_tri.get_normal();
-
-        assert_eq!(normal, Vec3::new(-1.0, -1.0, 0.0).normalize());
+        assert_eq!(test_tri.normal, Vec3::new(-1.0, -1.0, 0.0).normalize());
     }
 }

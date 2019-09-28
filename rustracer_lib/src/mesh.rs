@@ -132,16 +132,16 @@ pub fn load_mesh_from_file(
                     mesh.positions[z_idx as usize] as f64 * scale,
                 );
             }
-            let tri = Box::new(BasicTriangle {
-                corners: [
+            let tri = Box::new(BasicTriangle::new(
+                [
                     triangle_vertices[0] + translation,
                     triangle_vertices[1] + translation,
                     triangle_vertices[2] + translation,
                 ],
-                material: Box::new(Lambertian {
-                    albedo: albedo, // TODO: make this configurable!
+                Box::new(Lambertian {
+                    albedo: albedo,
                 }),
-            });
+            ));
             model_elements.push(tri);
         }
     }
