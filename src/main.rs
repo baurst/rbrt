@@ -7,6 +7,8 @@ use rustracer_lib::blueprints::{
     create_scene_from_scene_blueprint, load_blueprints_from_yaml_file,
 };
 
+use rustracer_lib::cam::Camera;
+
 fn main() {
     let app = App::new("rustracer")
         .version("0.1")
@@ -71,11 +73,19 @@ fn main() {
         .parse::<String>()
         .expect("Please specify a valid scene layout yaml file!");
 
-    let blah = load_blueprints_from_yaml_file(&config_file);
+    let scene_bp = load_blueprints_from_yaml_file(&config_file);
+    let cam = Camera::new(
+        scene_bp.camera_blueprint.camera_position,
+        scene_bp.camera_blueprint.camera_look_at,
+        scene_bp.camera_blueprint.camera_up,
+        height,
+        width,
+        scene_bp.camera_blueprint.camera_focal_length_mm,
+    );
 
-    let scene = create_scene_from_scene_blueprint(blah);
+    let scene = create_scene_from_scene_blueprint(scene_bp);
 
-    let img_buf = rustracer_lib::render_scene(height, width, num_samples, scene);
+    let img_buf = rustracer_lib::render_scene(cam, num_samples, scene);
 
     img_buf.save(target_image_path).unwrap();
 }

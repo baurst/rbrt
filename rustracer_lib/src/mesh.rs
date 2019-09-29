@@ -138,9 +138,7 @@ pub fn load_mesh_from_file(
                     triangle_vertices[1] + translation,
                     triangle_vertices[2] + translation,
                 ],
-                Box::new(Lambertian {
-                    albedo: albedo,
-                }),
+                Box::new(Lambertian { albedo: albedo }),
             ));
             model_elements.push(tri);
         }

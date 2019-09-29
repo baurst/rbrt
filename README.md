@@ -4,6 +4,10 @@ The inspiration for this project came from the excellent book ['Raytracing In On
 
 TODO: Add eyecatcher here!
 
+## Core Features
+* meshes are supported
+* scenes are configured easily via yaml 
+
 ## Try it out!
 ```bash
 git clone https://github.com/baurst/rustracer.git
@@ -18,7 +22,7 @@ wget http://graphics.stanford.edu/~mdfisher/Data/Meshes/bunny.obj
 ```
 
 ## Coordinate System
-The raytracer uses a right-handed coordinate system, with negative z pointing towards the scene.
+The raytracer uses a right-handed coordinate system, with negative z pointing through the camera lens towards the scene.
 
 ## Configuring the scene
 For an example scene configuration check out scenes/example_scene.yaml.

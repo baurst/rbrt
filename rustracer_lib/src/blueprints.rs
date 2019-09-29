@@ -32,7 +32,16 @@ pub struct SphereBlueprint {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct CameraBluePrint {
+    pub camera_up: Vec3,
+    pub camera_look_at: Vec3,
+    pub camera_position: Vec3,
+    pub camera_focal_length_mm: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct SceneBlueprint {
+    pub camera_blueprint: CameraBluePrint,
     pub mesh_blueprints: Vec<TriangleMeshBlueprint>,
     pub sphere_blueprints: Vec<SphereBlueprint>,
 }

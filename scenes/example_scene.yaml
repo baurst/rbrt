@@ -1,4 +1,18 @@
 ---
+camera_blueprint:
+  camera_up:
+    x: 0.0
+    y: 1.0
+    z: -0.4
+  camera_look_at:
+    x: 0.0
+    y: -0.1
+    z: -1.0
+  camera_position:
+    x: 0.0
+    y: 5.0
+    z: 4.0
+  camera_focal_length_mm: 35.0
 mesh_blueprints:
   - obj_filepath: bunny.obj
     scale: 45.0

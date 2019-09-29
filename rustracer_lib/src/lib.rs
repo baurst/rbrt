@@ -111,26 +111,18 @@ pub fn colorize(ray: &Ray, scene: &Scene, bg_color: &Vec3, current_depth: u32) -
 }
 
 pub fn render_scene(
-    height: u32,
-    width: u32,
+    cam: Camera,
     num_samples: u32,
     scene: Scene,
 ) -> image::ImageBuffer<Rgb<u8>, Vec<u8>> {
-    let cam_up = Vec3::new(0.0, 1.0, -0.4).normalize();
-    let cam_look_at = Vec3::new(0.0, -0.1, -1.0).normalize();
-    let cam_pos = Vec3::new(0.0, 5.0, 4.0);
-    let focal_len_mm = 35.0; // TODO: make camera configurable via yaml?
-
-    let cam = Camera::new(cam_pos, cam_look_at, cam_up, height, width, focal_len_mm);
-
     println!("Starting rendering...");
 
     let progress = AtomicUsize::new(0);
 
-    let hdr_img: Vec<Vec<Vec3>> = (0..width)
+    let hdr_img: Vec<Vec<Vec3>> = (0..cam.img_width_pix)
         .into_par_iter()
         .map(|col_idx| {
-            let col: Vec<Vec3> = (0..height)
+            let col: Vec<Vec3> = (0..cam.img_height_pix)
                 .into_par_iter()
                 .map(|row_idx| {
                     let bg_color = Vec3 {
@@ -151,12 +143,15 @@ pub fn render_scene(
                 .collect();
             let prog = progress.fetch_add(1, Ordering::SeqCst);
 
-            print!("\r{:.1}% complete!", prog as f64 / width as f64 * 100.0);
+            print!(
+                "\r{:.1}% complete!",
+                prog as f64 / cam.img_width_pix as f64 * 100.0
+            );
             col
         })
         .collect();
 
-    let mut imgbuf = image::ImageBuffer::new(width, height);
+    let mut imgbuf = image::ImageBuffer::new(cam.img_width_pix, cam.img_height_pix);
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
         let r = (hdr_img[x as usize][y as usize].x.sqrt() * 256.0) as u8;
         let g = (hdr_img[x as usize][y as usize].y.sqrt() * 256.0) as u8;
