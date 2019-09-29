@@ -27,9 +27,14 @@ The raytracer uses a right-handed coordinate system, with negative z pointing th
 ## Configuring the scene
 For an example scene configuration check out scenes/example_scene.yaml.
 Triangle meshes can be loaded by providing a path to an .obj file, spheres can also be added to the config yaml.
-For each scene element, a material definition needs to be specified in the config yaml, for example like so: 
-* for metal: "material: metal; albedo: (0.8, 0.8, 0.8); roughness: 0.005"
-* for a matte, lambertian material: "material: lambertian; albedo: (0.02,0.2,0.02)"
-* for a transparent dielectric material: "material: dielectric; ref_idx: 1.8"
+For each scene element, a material definition needs to be specified in the config yaml.
+Currently, three materials are supported: 
+* matte, lambertian material with paramter albedo, e.g. (0.02,0.2,0.02)
+* transparent dielectric material with parameter ref_idx, e.g. 1.8
+* metallic material, with scalar parameter roughness and albedo
 
 All of these features can be seen in the example_scene.yaml file in the config folder.
+
+## Open Points
+- [ ] refactor TriangleMesh to be structure of arrays instead of Vec\<BasicTriangle\>, sharing a common material
+- [ ] find fix for: for TriangleMesh, currently only lambertian is supported, due to size of material not being known at compile time
