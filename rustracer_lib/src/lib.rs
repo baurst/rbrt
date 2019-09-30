@@ -144,12 +144,13 @@ pub fn render_scene(
             let prog = progress.fetch_add(1, Ordering::SeqCst);
 
             print!(
-                "\r{:.1}% complete!",
+                "\rRendering {:.1}% complete!",
                 prog as f64 / cam.img_width_pix as f64 * 100.0
             );
             col
         })
         .collect();
+    print!("\rRendering 100% complete!");
 
     let mut imgbuf = image::ImageBuffer::new(cam.img_width_pix, cam.img_height_pix);
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {

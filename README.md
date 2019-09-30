@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/baurst/rustracer.svg?token=KGmoNyosUqTq92iqGZE9&branch=master)](https://travis-ci.com/baurst/rustracer)
+
 # Rustracer
 This is yet another raytracer written in Rust. Coming from C++, Rusts ownership concepts (and easy way of managing dependencies and cross-platform builds) fascinated me and so I thought it could be fun to write a lightweight but capable raytracer to get to know the language better.
 The inspiration for this project came from the excellent book ['Raytracing In One Weekend'](https://raytracing.github.io) by Peter Shirley as well as ssloys awesome [tinyraytracer](https://github.com/ssloy/tinyraytracer).
@@ -5,8 +7,8 @@ The inspiration for this project came from the excellent book ['Raytracing In On
 TODO: Add eyecatcher here!
 
 ## Core Features
-* meshes are supported
-* scenes are configured easily via yaml 
+* meshes are supported via .obj file
+* scenes are configured easily via yaml (see scenes/example_scene.yml)
 
 ## Try it out!
 ```bash
@@ -38,3 +40,4 @@ All of these features can be seen in the example_scene.yaml file in the config f
 ## Open Points
 - [ ] refactor TriangleMesh to be structure of arrays instead of Vec\<BasicTriangle\>, sharing a common material
 - [ ] find fix for: for TriangleMesh, currently only lambertian is supported, due to size of material not being known at compile time
+- [ ] Optimize: profiling with perf revealed a hotspot in triangle intersect_with_ray, find low hanging fruits there
