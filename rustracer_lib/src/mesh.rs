@@ -72,12 +72,12 @@ impl TriangleMesh {
     }
 }
 
+/// computes the axis aligned bounding box extents of triangles 
 pub fn compute_min_max_3d(
     triangle_mesh: Vec<Box<BasicTriangle>>,
 ) -> (Vec<Box<BasicTriangle>>, Vec3, Vec3) {
     let mut lower_bound_tmp = Vec3::new(std::f64::MAX, std::f64::MAX, std::f64::MAX);
     let mut upper_bound_tmp = Vec3::new(-std::f64::MAX, -std::f64::MAX, -std::f64::MAX);
-    // wow that code stinks!
     for tri in &triangle_mesh {
         for corner in &tri.corners {
             if corner.x < lower_bound_tmp.x {
@@ -162,7 +162,8 @@ impl Intersectable for TriangleMesh {
         if !self.bbox.hit(ray) {
             return None;
         }
-        // if bounding box is hit, check all triangles
+        
+        // current bottleneck: if bounding box is hit, check all triangles
         let mut closest_hit_rec = None;
         let mut closest_so_far = std::f64::MAX;
 
@@ -176,7 +177,6 @@ impl Intersectable for TriangleMesh {
                 }
             }
         }
-
         return closest_hit_rec;
     }
 }
