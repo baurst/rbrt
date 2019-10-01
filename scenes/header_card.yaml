@@ -48,18 +48,41 @@ sphere_blueprints:
       x: 0.1
       y: 0.1
       z: 0.9
+# matte yellow sphere
+  - radius: 0.7
+    center:
+      x: 3.0
+      y: 0.7
+      z: -9.5
+    material_type: "lambertian"
+    albedo:
+      x: 0.5
+      y: 0.5
+      z: 0.1
 # metal sphere
   - radius: 2.5
     center:
-      x: -4.0
+      x: -4.5
       y: 2.5
-      z: -15.0
+      z: -16.0
     material_type: "metal"
     albedo:
       x: 0.9
       y: 0.9
       z: 0.9
     material_param: 0.005
+# metal sphere
+  - radius: 2.0
+    center:
+      x: 8.5
+      y: 5.5
+      z: -20.0
+    material_type: "metal"
+    albedo:
+      x: 0.9
+      y: 0.9
+      z: 0.9
+    material_param: 0.001
 # glass sphere                  
   - radius: 1.0
     center:
