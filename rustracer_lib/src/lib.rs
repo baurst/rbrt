@@ -26,6 +26,7 @@ use image::Rgb;
 
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::sync::atomic::{AtomicUsize, Ordering};
+
 #[derive(Copy, Clone)]
 pub struct HitInformation<'a> {
     pub hit_point: Vec3,

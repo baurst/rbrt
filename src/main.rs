@@ -39,14 +39,14 @@ fn main() {
             Arg::with_name("config")
                 .short("c")
                 .long("config")
-                .help("YAML file that specifies the scene layout.")
+                .help("YAML file that specifies the scene layout and camera specification.")
                 .default_value("scenes/example_scene.yaml"),
         )
         .arg(
             Arg::with_name("samples")
                 .short("s")
                 .long("samples")
-                .help("number of samples to draw per pixel")
+                .help("number of rays per pixel")
                 .default_value("5"),
         );
     let matches = app.get_matches();
