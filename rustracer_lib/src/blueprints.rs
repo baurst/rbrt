@@ -53,16 +53,17 @@ fn create_material_from_description(
 ) -> Option<Box<dyn RayScattering + std::marker::Sync + 'static>> {
     if mat_type.to_lowercase().contains("metal") {
         return Some(Box::new(Metal {
-            albedo: albedo.unwrap(),
-            roughness: material_param.unwrap(),
+            albedo: albedo.expect("you forgot to specify an albedo vector for metal"),
+            roughness: material_param
+                .expect("you forgot to specify a roughness (i.e. material_param: 0.1) for metal"),
         }));
     } else if mat_type.to_lowercase().contains("lambert") {
         return Some(Box::new(Lambertian {
-            albedo: albedo.unwrap(),
+            albedo: albedo.expect("you forgot to specify an albedo vector for lambertian"),
         }));
     } else if mat_type.to_lowercase().contains("dielectric") {
         return Some(Box::new(Dielectric {
-            ref_idx: material_param.unwrap(),
+            ref_idx: material_param.expect("you forgot to specify a refractory index vector (i.e. material_param: 1.8) dielectric"),
         }));
     }
     println!(
