@@ -39,7 +39,6 @@ impl Intersectable for Sphere {
         if num_hits == 0 {
             return None;
         } else {
-            //assert!(false); // handle case where num hits = 1??
             let mut ray_param = (-b - sol.sqrt()) / (2.0 * a);
             if num_hits == 2 && ray_param < 0.0 {
                 //point is behind the camera!
@@ -72,7 +71,7 @@ mod tests {
     use super::{Ray, Sphere, Vec3};
     use crate::metal::Metal;
     use crate::Intersectable;
-    // dont need Material here, use Option?
+
     #[test]
     fn test_sphere_intersection() {
         // Camera looks onto sphere from front

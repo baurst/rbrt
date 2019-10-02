@@ -32,7 +32,8 @@ impl Camera {
             .cross_product(&up.normalize())
             .normalize();
 
-        let img_width_mm = 35.0; // full frame sensor so that focal length is intuitive
+        // full frame sensor so that focal length is intuitive
+        let img_width_mm = 35.0;
         let mm_per_pix_hor = img_width_mm / img_width_pix as f64;
 
         let img_height_mm = img_height_pix as f64 * mm_per_pix_hor;
