@@ -30,6 +30,7 @@ pub fn get_triangle_normal(corners: [Vec3; 3]) -> Vec3 {
 }
 
 impl Intersectable for BasicTriangle {
+    /// see https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
     fn intersect_with_ray<'a>(
         &'a self,
         ray: &Ray,
