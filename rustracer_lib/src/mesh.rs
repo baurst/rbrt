@@ -72,7 +72,7 @@ impl TriangleMesh {
     }
 }
 
-/// computes the axis aligned bounding box extents of triangles 
+/// computes the axis aligned bounding box extents of triangles
 pub fn compute_min_max_3d(
     triangle_mesh: Vec<Box<BasicTriangle>>,
 ) -> (Vec<Box<BasicTriangle>>, Vec3, Vec3) {
@@ -144,7 +144,7 @@ pub fn load_mesh_from_file(
         }
     }
     println!(
-        "Loaded {} triangles from file {}!",
+        "Successfully loaded {} triangles from file {}!",
         model_elements.len(),
         filepath
     );
@@ -162,8 +162,8 @@ impl Intersectable for TriangleMesh {
         if !self.bbox.hit(ray) {
             return None;
         }
-        
-        // current bottleneck: if bounding box is hit, check all triangles
+
+        // current bottleneck: if bounding box is hit, all triangles must be checked for intersection
         let mut closest_hit_rec = None;
         let mut closest_so_far = std::f64::MAX;
 
@@ -178,5 +178,33 @@ impl Intersectable for TriangleMesh {
             }
         }
         return closest_hit_rec;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{compute_min_max_3d, BasicTriangle, Vec3};
+
+    use crate::lambertian::Lambertian;
+    #[test]
+
+    fn test_mesh_aabbox() {
+        let test_tri = Box::new(BasicTriangle::new(
+            [
+                Vec3::new(1.0, 0.0, 0.0),
+                Vec3::new(1.0, 0.0, 1.0),
+                Vec3::new(0.0, 1.0, 0.0),
+            ],
+            Box::new(Lambertian {
+                albedo: Vec3::new(0.5, 0.2, 0.2),
+            }),
+        ));
+
+        let tris = vec![test_tri];
+
+        let (_mesh, lower_bound, upper_bound) = compute_min_max_3d(tris);
+
+        assert_eq!(lower_bound, Vec3::new(0.0, 0.0, 0.0));
+        assert_eq!(upper_bound, Vec3::new(1.0, 1.0, 1.0));
     }
 }

@@ -1,6 +1,5 @@
 extern crate clap;
 extern crate rustracer_lib;
-
 use clap::{App, Arg};
 
 use rustracer_lib::blueprints::{
@@ -52,6 +51,7 @@ fn main() {
     let matches = app.get_matches();
 
     let target_image_path = matches.value_of("target_file").unwrap();
+
     let height: u32 = matches
         .value_of("height")
         .unwrap()

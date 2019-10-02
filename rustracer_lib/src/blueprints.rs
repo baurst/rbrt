@@ -51,16 +51,16 @@ fn create_material_from_description(
     albedo: Option<Vec3>,
     material_param: Option<f64>,
 ) -> Option<Box<dyn RayScattering + std::marker::Sync + 'static>> {
-    if mat_type.contains("metal") {
+    if mat_type.to_lowercase().contains("metal") {
         return Some(Box::new(Metal {
             albedo: albedo.unwrap(),
             roughness: material_param.unwrap(),
         }));
-    } else if mat_type.contains("lambert") {
+    } else if mat_type.to_lowercase().contains("lambert") {
         return Some(Box::new(Lambertian {
             albedo: albedo.unwrap(),
         }));
-    } else if mat_type.contains("dielectric") {
+    } else if mat_type.to_lowercase().contains("dielectric") {
         return Some(Box::new(Dielectric {
             ref_idx: material_param.unwrap(),
         }));
@@ -72,8 +72,22 @@ fn create_material_from_description(
 }
 
 pub fn load_blueprints_from_yaml_file(filepath: &str) -> SceneBlueprint {
-    let f = File::open(filepath).unwrap();
-    let scene_bp: SceneBlueprint = serde_yaml::from_reader(f).unwrap();
+    let f = File::open(filepath);
+    let f = match f {
+        Ok(file) => file,
+        Err(error) => panic!("Failed to open {:?} to load content.", error),
+    };
+
+    let scene_bp = serde_yaml::from_reader(f);
+
+    let scene_bp = match scene_bp {
+        Ok(bp) => bp,
+        Err(error) => panic!(
+            "Unable to parse content of file {:?} to scene blueprint: {:?}",
+            filepath, error
+        ),
+    };
+
     return scene_bp;
 }
 
@@ -88,7 +102,7 @@ fn parse_mesh_bp(mesh_bp: TriangleMeshBlueprint) -> Option<TriangleMesh> {
         Some(content) => content,
         None => {
             panic!(
-                "Meshes don't support anything but lambertians right now, please provide albedo!"
+                "Meshes don't support anything but lambertian materials right now, please provide albedo!"
             );
         }
     };

@@ -43,19 +43,15 @@ impl RayScattering for Dielectric {
             &mut refracted_ray_dir,
         ) {
             reflect_prob = schlick(cosine, self.ref_idx);
-        //println!("Schlick prob {}", reflect_prob);
         } else {
             reflect_prob = 1.0;
         }
         if rand::random::<f64>() < reflect_prob {
-            //println!("Prob: {}, reflecting!", reflect_prob);
             *scattered_ray = Ray {
                 origin: hit_info.hit_point,
                 direction: reflected_ray_dir,
             };
         } else {
-            //println!("Prob: {}, refracting!", reflect_prob);
-
             *scattered_ray = Ray {
                 origin: hit_info.hit_point,
                 direction: refracted_ray_dir,
@@ -86,7 +82,6 @@ pub fn refract(
             ni_over_nt * (view_unit - normal_unit * cos_theta) - discr.sqrt() * normal_unit;
         return true;
     }
-    // println!("Glass did not refract! {}", discr);
     return false;
 }
 
