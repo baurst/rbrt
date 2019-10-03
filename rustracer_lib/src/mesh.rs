@@ -28,25 +28,35 @@ impl BoundingBox {
             upper_bound: upper_bound,
         };
     }
-    /// see https://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms
+    /// for explanation see https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection
+    /// see also https://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms
     pub fn hit(&self, ray: &Ray) -> bool {
-        let t1 = (self.lower_bound.x - ray.origin.x) / ray.direction.x;
-        let t2 = (self.upper_bound.x - ray.origin.x) / ray.direction.x;
-        let t3 = (self.lower_bound.y - ray.origin.y) / ray.direction.y;
-        let t4 = (self.upper_bound.y - ray.origin.y) / ray.direction.y;
-        let t5 = (self.lower_bound.z - ray.origin.z) / ray.direction.z;
-        let t6 = (self.upper_bound.z - ray.origin.z) / ray.direction.z;
+        // get ray parameters that show where the ray intersects the box planes
+        let t_lower_x = (self.lower_bound.x - ray.origin.x) / ray.direction.x;
+        let t_upper_x = (self.upper_bound.x - ray.origin.x) / ray.direction.x;
+        let t_lower_y = (self.lower_bound.y - ray.origin.y) / ray.direction.y;
+        let t_upper_y = (self.upper_bound.y - ray.origin.y) / ray.direction.y;
+        let t_lower_z = (self.lower_bound.z - ray.origin.z) / ray.direction.z;
+        let t_upper_z = (self.upper_bound.z - ray.origin.z) / ray.direction.z;
 
-        let tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6));
-        let tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6));
+        let t_min_x = min(t_lower_x, t_upper_x);
+        let t_min_y = min(t_lower_y, t_upper_y);
+        let t_min_z = min(t_lower_z, t_upper_z);
 
-        // if tmax < 0, ray (line) is intersecting AABB, but the whole AABB is behind us
-        if tmax < 0.0 {
+        let t_min = max(max(t_min_x, t_min_y), t_min_z);
+
+        let t_max_x = max(t_lower_x, t_upper_x);
+        let t_max_y = max(t_lower_y, t_upper_y);
+        let t_max_z = max(t_lower_z, t_upper_z);
+
+        let t_max = min(min(t_max_x, t_max_y), t_max_z);
+
+        // intersection, but opposite to ray direction
+        if t_max < 0.0 {
             return false;
         }
 
-        // if tmin > tmax, ray doesn't intersect AABB
-        if tmin > tmax {
+        if t_min > t_max {
             return false;
         }
         return true;

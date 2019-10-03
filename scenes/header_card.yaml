@@ -72,10 +72,10 @@ sphere_blueprints:
       z: 0.9
     material_param: 0.005
 # metal sphere
-  - radius: 2.0
+  - radius: 4.0
     center:
-      x: 8.5
-      y: 5.5
+      x: 9.5
+      y: 4.0
       z: -20.0
     material_type: "metal"
     albedo:
