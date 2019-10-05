@@ -70,8 +70,14 @@ pub struct TriangleMesh {
 }
 
 impl TriangleMesh {
-    pub fn new(filepath: &str, translation: Vec3, scale: f64, albedo: Vec3) -> TriangleMesh {
-        let mesh = load_mesh_from_file(filepath, translation, scale, albedo);
+    pub fn new(
+        filepath: &str,
+        translation: Vec3,
+        rotation: Vec3,
+        scale: f64,
+        albedo: Vec3,
+    ) -> TriangleMesh {
+        let mesh = load_mesh_from_file(filepath, translation, rotation, scale, albedo);
         let (mesh, lower_bound, upper_bound) = compute_min_max_3d(mesh);
 
         return TriangleMesh {
@@ -117,6 +123,7 @@ pub fn compute_min_max_3d(
 pub fn load_mesh_from_file(
     filepath: &str,
     translation: Vec3,
+    rotation: Vec3,
     scale: f64,
     albedo: Vec3,
 ) -> Vec<Box<BasicTriangle>> {
@@ -144,9 +151,21 @@ pub fn load_mesh_from_file(
             }
             let tri = Box::new(BasicTriangle::new(
                 [
-                    triangle_vertices[0] + translation,
-                    triangle_vertices[1] + translation,
-                    triangle_vertices[2] + translation,
+                    triangle_vertices[0].rotate_point(
+                        rotation.x.to_radians(),
+                        rotation.y.to_radians(),
+                        rotation.z.to_radians(),
+                    ) + translation,
+                    triangle_vertices[1].rotate_point(
+                        rotation.x.to_radians(),
+                        rotation.y.to_radians(),
+                        rotation.z.to_radians(),
+                    ) + translation,
+                    triangle_vertices[2].rotate_point(
+                        rotation.x.to_radians(),
+                        rotation.y.to_radians(),
+                        rotation.z.to_radians(),
+                    ) + translation,
                 ],
                 Box::new(Lambertian { albedo: albedo }),
             ));

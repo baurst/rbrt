@@ -20,6 +20,10 @@ mesh_blueprints:
       x: 3.5
       y: -1.8
       z: -14.0
+    rotation:
+      x: 0.0
+      y: 0.0
+      z: 0.0
     material_type: "lambertian"
     albedo:
       x: 1.0

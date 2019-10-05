@@ -127,6 +127,8 @@ impl Vec3 {
         )
     }
 
+    /// rotate a point Z,X,Z
+    /// angles in radians
     pub fn rotate_point(&self, r_x: f64, r_y: f64, r_z: f64) -> Vec3 {
         let s_x = r_x.sin();
         let s_y = r_y.sin();
