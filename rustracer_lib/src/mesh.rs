@@ -42,13 +42,13 @@ impl BoundingBox {
         let t_min_x = min(t_lower_x, t_upper_x);
         let t_min_y = min(t_lower_y, t_upper_y);
         let t_min_z = min(t_lower_z, t_upper_z);
-
+        // look for the biggest lower intersection across all dimensions
         let t_min = max(max(t_min_x, t_min_y), t_min_z);
 
         let t_max_x = max(t_lower_x, t_upper_x);
         let t_max_y = max(t_lower_y, t_upper_y);
         let t_max_z = max(t_lower_z, t_upper_z);
-
+        // look for the smallest upper intersection across all dimensions
         let t_max = min(min(t_max_x, t_max_y), t_max_z);
 
         // intersection, but opposite to ray direction
