@@ -129,14 +129,14 @@ impl Vec3 {
 
     /// rotate a point Z,X,Z
     /// angles in radians
-    pub fn rotate_point(&self, r_x: f64, r_y: f64, r_z: f64) -> Vec3 {
-        let s_x = r_x.sin();
-        let s_y = r_y.sin();
-        let s_z = r_z.sin();
+    pub fn rotate_point(&self, rot: Vec3) -> Vec3 {
+        let s_x = rot.x.sin();
+        let s_y = rot.y.sin();
+        let s_z = rot.z.sin();
 
-        let c_x = r_x.cos();
-        let c_y = r_y.cos();
-        let c_z = r_z.cos();
+        let c_x = rot.x.cos();
+        let c_y = rot.y.cos();
+        let c_z = rot.z.cos();
 
         let (x, y, z) = (self.x, self.y, self.z);
 
@@ -202,129 +202,136 @@ mod tests {
 
     #[test]
     fn test_rotate_yaw() {
+        struct RotTest {
+            pub point: Vec3,
+            pub point_expected: Vec3,
+            pub rotation: Vec3,
+        }
+        impl RotTest {
+            pub fn new(pt: Vec3, rot: Vec3, pt_exp: Vec3) -> RotTest {
+                RotTest {
+                    point: pt,
+                    rotation: rot,
+                    point_expected: pt_exp,
+                }
+            }
+        }
         let a = 0.7071067657322372;
         let f_delta = 0.000001;
 
-        assert!(
-            (Vec3::new(1.0, 0.0, 0.0).rotate_point(0.0, 0.0, (45.0 as f32).to_radians() as f64)
-                - Vec3::new(a, a, 0.0))
-            .length()
-                < f_delta
-        );
-        assert!(
-            (Vec3::new(1.0, 0.0, 0.0).rotate_point(0.0, 0.0, (-45.0 as f32).to_radians() as f64)
-                - Vec3::new(a, -a, 0.0))
-            .length()
-                < f_delta
-        );
+        let exp_vec = vec![
+            RotTest::new(
+                // point
+                Vec3::new(1.0, 0.0, 0.0),
+                // rotation
+                Vec3::new(0.0, 0.0, (45.0 as f32).to_radians() as f64),
+                // expected point
+                Vec3::new(a, a, 0.0),
+            ),
+            RotTest::new(
+                Vec3::new(1.0, 0.0, 0.0),
+                Vec3::new(0.0, 0.0, (-45.0 as f32).to_radians() as f64),
+                Vec3::new(a, -a, 0.0),
+            ),
+            RotTest::new(
+                Vec3::new(0.0, 1.0, 0.0),
+                Vec3::new(0.0, 0.0, (45.0 as f32).to_radians() as f64),
+                Vec3::new(-a, a, 0.0),
+            ),
+            RotTest::new(
+                Vec3::new(0.0, 1.0, 0.0),
+                Vec3::new(0.0, 0.0, (-45.0 as f32).to_radians() as f64),
+                Vec3::new(a, a, 0.0),
+            ),
+            RotTest::new(
+                Vec3::new(0.0, 0.0, 1.0),
+                Vec3::new(0.0, 0.0, (45.0 as f32).to_radians() as f64),
+                Vec3::new(0.0, 0.0, 1.0),
+            ),
+            RotTest::new(
+                Vec3::new(0.0, 0.0, 1.0),
+                Vec3::new(0.0, 0.0, (-45.0 as f32).to_radians() as f64),
+                Vec3::new(0.0, 0.0, 1.0),
+            ),
+            RotTest::new(
+                Vec3::new(1.0, 0.0, 0.0),
+                Vec3::new(0.0, (45.0 as f32).to_radians() as f64, 0.0),
+                Vec3::new(1.0, 0.0, 0.0),
+            ),
+            RotTest::new(
+                Vec3::new(1.0, 0.0, 0.0),
+                Vec3::new(0.0, (-45.0 as f32).to_radians() as f64, 0.0),
+                Vec3::new(1.0, 0.0, 0.0),
+            ),
+            RotTest::new(
+                Vec3::new(0.0, 1.0, 0.0),
+                Vec3::new(0.0, (45.0 as f32).to_radians() as f64, 0.0),
+                Vec3::new(0.0, a, a),
+            ),
+            RotTest::new(
+                Vec3::new(0.0, 1.0, 0.0),
+                Vec3::new(0.0, (-45.0 as f32).to_radians() as f64, 0.0),
+                Vec3::new(0.0, a, -a),
+            ),
+            RotTest::new(
+                Vec3::new(0.0, 0.0, 1.0),
+                Vec3::new(0.0, (45.0 as f32).to_radians() as f64, 0.0),
+                Vec3::new(0.0, -a, a),
+            ),
+            RotTest::new(
+                Vec3::new(0.0, 0.0, 1.0),
+                Vec3::new(0.0, (-45.0 as f32).to_radians() as f64, 0.0),
+                Vec3::new(0.0, a, a),
+            ),
+            RotTest::new(
+                Vec3::new(1.0, 0.0, 0.0),
+                Vec3::new((45.0 as f32).to_radians() as f64, 0.0, 0.0),
+                Vec3::new(a, a, 0.0),
+            ),
+            RotTest::new(
+                Vec3::new(1.0, 0.0, 0.0),
+                Vec3::new((-45.0 as f32).to_radians() as f64, 0.0, 0.0),
+                Vec3::new(a, -a, 0.0),
+            ),
+            RotTest::new(
+                Vec3::new(0.0, 1.0, 0.0),
+                Vec3::new((45.0 as f32).to_radians() as f64, 0.0, 0.0),
+                Vec3::new(-a, a, 0.0),
+            ),
+            RotTest::new(
+                Vec3::new(0.0, 1.0, 0.0),
+                Vec3::new((-45.0 as f32).to_radians() as f64, 0.0, 0.0),
+                Vec3::new(a, a, 0.0),
+            ),
+            RotTest::new(
+                Vec3::new(0.0, 0.0, 1.0),
+                Vec3::new((45.0 as f32).to_radians() as f64, 0.0, 0.0),
+                Vec3::new(0.0, 0.0, 1.0),
+            ),
+            RotTest::new(
+                Vec3::new(0.0, 0.0, 1.0),
+                Vec3::new((45.0 as f32).to_radians() as f64, 0.0, 0.0),
+                Vec3::new(0.0, 0.0, 1.0),
+            ),
+            RotTest::new(
+                Vec3::new(0.0, 0.0, 1.0),
+                Vec3::new((-45.0 as f32).to_radians() as f64, 0.0, 0.0),
+                Vec3::new(0.0, 0.0, 1.0),
+            ),
+        ];
 
-        assert!(
-            (Vec3::new(0.0, 1.0, 0.0).rotate_point(0.0, 0.0, (45.0 as f32).to_radians() as f64)
-                - Vec3::new(-a, a, 0.0))
-            .length()
-                < f_delta
-        );
-        assert!(
-            (Vec3::new(0.0, 1.0, 0.0).rotate_point(0.0, 0.0, (-45.0 as f32).to_radians() as f64)
-                - Vec3::new(a, a, 0.0))
-            .length()
-                < f_delta
-        );
-        assert!(
-            (Vec3::new(0.0, 0.0, 1.0).rotate_point(0.0, 0.0, (45.0 as f32).to_radians() as f64)
-                - Vec3::new(0.0, 0.0, 1.0))
-            .length()
-                < f_delta
-        );
-        assert!(
-            (Vec3::new(0.0, 0.0, 1.0).rotate_point(0.0, 0.0, (-45.0 as f32).to_radians() as f64)
-                - Vec3::new(0.0, 0.0, 1.0))
-            .length()
-                < f_delta
-        );
-    }
-    #[test]
-    fn test_rotate_pitch() {
-        let a = 0.7071067657322372;
-        let f_delta = 0.000001;
+        for test_struct in exp_vec.iter() {
+            let rot_pt = test_struct.point.rotate_point(test_struct.rotation);
+            let residuum = (test_struct.point_expected - rot_pt).length();
 
-        assert!(
-            (Vec3::new(1.0, 0.0, 0.0).rotate_point(0.0, (45.0 as f32).to_radians() as f64, 0.0)
-                - Vec3::new(1.0, 0.0, 0.0))
-            .length()
-                < f_delta
-        );
-        assert!(
-            (Vec3::new(1.0, 0.0, 0.0).rotate_point(0.0, (-45.0 as f32).to_radians() as f64, 0.0)
-                - Vec3::new(1.0, 0.0, 0.0))
-            .length()
-                < f_delta
-        );
-        assert!(
-            (Vec3::new(0.0, 1.0, 0.0).rotate_point(0.0, (45.0 as f32).to_radians() as f64, 0.0)
-                - Vec3::new(0.0, a, a))
-            .length()
-                < f_delta
-        );
-        assert!(
-            (Vec3::new(0.0, 1.0, 0.0).rotate_point(0.0, (-45.0 as f32).to_radians() as f64, 0.0)
-                - Vec3::new(0.0, a, -a))
-            .length()
-                < f_delta
-        );
-        assert!(
-            (Vec3::new(0.0, 0.0, 1.0).rotate_point(0.0, (45.0 as f32).to_radians() as f64, 0.0)
-                - Vec3::new(0.0, -a, a))
-            .length()
-                < f_delta
-        );
-        assert!(
-            (Vec3::new(0.0, 0.0, 1.0).rotate_point(0.0, (-45.0 as f32).to_radians() as f64, 0.0)
-                - Vec3::new(0.0, a, a))
-            .length()
-                < f_delta
-        );
-    }
-    #[test]
-    fn test_rotate_roll() {
-        let a = 0.7071067657322372;
-        let f_delta = 0.000001;
-        assert!(
-            (Vec3::new(1.0, 0.0, 0.0).rotate_point((45.0 as f32).to_radians() as f64, 0.0, 0.0)
-                - Vec3::new(a, a, 0.0))
-            .length()
-                < f_delta
-        );
-        assert!(
-            (Vec3::new(1.0, 0.0, 0.0).rotate_point((-45.0 as f32).to_radians() as f64, 0.0, 0.0)
-                - Vec3::new(a, -a, 0.0))
-            .length()
-                < f_delta
-        );
-
-        assert!(
-            (Vec3::new(0.0, 1.0, 0.0).rotate_point((45.0 as f32).to_radians() as f64, 0.0, 0.0)
-                - Vec3::new(-a, a, 0.0))
-            .length()
-                < f_delta
-        );
-        assert!(
-            (Vec3::new(0.0, 1.0, 0.0).rotate_point((-45.0 as f32).to_radians() as f64, 0.0, 0.0)
-                - Vec3::new(a, a, 0.0))
-            .length()
-                < f_delta
-        );
-        assert!(
-            (Vec3::new(0.0, 0.0, 1.0).rotate_point((45.0 as f32).to_radians() as f64, 0.0, 0.0)
-                - Vec3::new(0.0, 0.0, 1.0))
-            .length()
-                < f_delta
-        );
-        assert!(
-            (Vec3::new(0.0, 0.0, 1.0).rotate_point((-45.0 as f32).to_radians() as f64, 0.0, 0.0)
-                - Vec3::new(0.0, 0.0, 1.0))
-            .length()
-                < f_delta
-        );
+            assert!(
+                residuum < f_delta,
+                "Point: {:?}, Rotation: {:?}, Expected: {:?}, Rotated Point {:?}",
+                test_struct.point,
+                test_struct.rotation,
+                test_struct.point_expected,
+                rot_pt
+            )
+        }
     }
 }

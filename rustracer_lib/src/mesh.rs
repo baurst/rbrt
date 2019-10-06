@@ -151,21 +151,9 @@ pub fn load_mesh_from_file(
             }
             let tri = Box::new(BasicTriangle::new(
                 [
-                    triangle_vertices[0].rotate_point(
-                        rotation.x.to_radians(),
-                        rotation.y.to_radians(),
-                        rotation.z.to_radians(),
-                    ) + translation,
-                    triangle_vertices[1].rotate_point(
-                        rotation.x.to_radians(),
-                        rotation.y.to_radians(),
-                        rotation.z.to_radians(),
-                    ) + translation,
-                    triangle_vertices[2].rotate_point(
-                        rotation.x.to_radians(),
-                        rotation.y.to_radians(),
-                        rotation.z.to_radians(),
-                    ) + translation,
+                    triangle_vertices[0].rotate_point(rotation) + translation,
+                    triangle_vertices[1].rotate_point(rotation) + translation,
+                    triangle_vertices[2].rotate_point(rotation) + translation,
                 ],
                 Box::new(Lambertian { albedo: albedo }),
             ));
