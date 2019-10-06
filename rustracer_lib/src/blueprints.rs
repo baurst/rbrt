@@ -17,7 +17,7 @@ pub struct TriangleMeshBlueprint {
     pub obj_filepath: String,
     pub scale: f64,
     pub translation: Vec3,
-    pub rotation: Vec3,
+    pub rotation_rad: Vec3,
     pub material_type: String,
     pub albedo: Option<Vec3>,
     pub material_param: Option<f64>,
@@ -112,7 +112,7 @@ fn parse_mesh_bp(mesh_bp: TriangleMeshBlueprint) -> Option<TriangleMesh> {
     let tri_mesh = Some(TriangleMesh::new(
         &mesh_bp.obj_filepath,
         mesh_bp.translation,
-        mesh_bp.rotation,
+        mesh_bp.rotation_rad,
         mesh_bp.scale,
         albedo,
     ));
