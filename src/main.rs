@@ -87,5 +87,8 @@ fn main() {
 
     let img_buf = rustracer_lib::render_scene(cam, num_samples, scene);
 
-    img_buf.save(target_image_path).unwrap();
+    img_buf.save(target_image_path).expect(&format!(
+        "Unable to save target img to {}! Maybe the directory does not exist?",
+        target_image_path
+    ));
 }
