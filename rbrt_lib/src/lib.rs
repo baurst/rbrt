@@ -2,6 +2,7 @@ extern crate image;
 extern crate rand;
 extern crate rayon;
 
+pub mod aabbox;
 pub mod blueprints;
 pub mod cam;
 pub mod dielectric;
