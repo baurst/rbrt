@@ -37,8 +37,3 @@ Currently, three materials are supported:
 * metallic material, with scalar parameter roughness and albedo
 
 All of these features can be seen in the example_scene.yaml file in the config folder.
-
-## Open Points
-- [ ] refactor TriangleMesh to be structure of arrays instead of Vec\<BasicTriangle\>, sharing a common material
-- [ ] find fix for: for TriangleMesh, currently only lambertian is supported, due to size of material not being known at compile time
-- [ ] Optimize: profiling with perf revealed a hotspot in triangle intersect_with_ray, find low hanging fruits there
