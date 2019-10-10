@@ -24,8 +24,12 @@ mesh_blueprints:
       x: 0.0
       y: 0.0
       z: 0.0
-    material_type: "dielectric"
-    material_param: 2.4
+    material_type: "metal"
+    material_param: 0.2
+    albedo:
+      x: 0.8
+      y: 0.8
+      z: 0.8
 sphere_blueprints:
 # green earth
   - radius: 1000.0 
