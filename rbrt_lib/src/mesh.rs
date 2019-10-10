@@ -2,7 +2,7 @@ extern crate tobj;
 use std::path::Path;
 
 use crate::lambertian::Lambertian;
-use crate::triangle::BasicTriangle;
+use crate::triangle::{get_triangle_normal, BasicTriangle};
 use crate::vec3::Vec3;
 use crate::{HitInformation, Intersectable, Ray, RayScattering};
 
@@ -64,9 +64,12 @@ impl BoundingBox {
 }
 
 pub struct TriangleMesh {
-    pub triangles: Vec<Box<BasicTriangle>>,
+    pub vertices: Vec<[Vec3; 3]>,
+    pub normals: Vec<Vec3>,
+    pub edges: Vec<[Vec3; 2]>,
+
     pub bbox: BoundingBox,
-    pub _material: Option<Box<dyn RayScattering + Sync>>,
+    pub material: Box<dyn RayScattering + Sync>,
 }
 
 impl TriangleMesh {
@@ -77,46 +80,105 @@ impl TriangleMesh {
         scale: f64,
         albedo: Vec3,
     ) -> TriangleMesh {
-        let mesh = load_mesh_from_file(filepath, translation, rotation, scale, albedo);
-        let (mesh, lower_bound, upper_bound) = compute_min_max_3d(mesh);
+        let vertices = load_mesh_vertices_from_file(filepath, translation, rotation, scale);
+
+        let mut normals = vec![];
+        for triangle_vertices in &vertices {
+            normals.push(get_triangle_normal(&triangle_vertices));
+        }
+
+        let mut edges = vec![];
+        for triangle_vertices in &vertices {
+            edges.push([
+                triangle_vertices[1] - triangle_vertices[0],
+                triangle_vertices[2] - triangle_vertices[0],
+            ]);
+        }
+
+        let (lower_bound, upper_bound) = compute_min_max_3d(&vertices);
 
         return TriangleMesh {
-            triangles: mesh,
+            vertices: vertices,
+            normals: normals,
+            edges: edges,
             bbox: BoundingBox::new(lower_bound, upper_bound),
-            _material: None,
+            material: Box::new(Lambertian { albedo: albedo }),
         };
     }
 }
 
 /// computes the axis aligned bounding box extents of triangles
-pub fn compute_min_max_3d(
-    triangle_mesh: Vec<Box<BasicTriangle>>,
-) -> (Vec<Box<BasicTriangle>>, Vec3, Vec3) {
+pub fn compute_min_max_3d(triangle_mesh: &Vec<[Vec3; 3]>) -> (Vec3, Vec3) {
     let mut lower_bound_tmp = Vec3::new(std::f64::MAX, std::f64::MAX, std::f64::MAX);
     let mut upper_bound_tmp = Vec3::new(-std::f64::MAX, -std::f64::MAX, -std::f64::MAX);
-    for tri in &triangle_mesh {
-        for corner in &tri.corners {
-            if corner.x < lower_bound_tmp.x {
-                lower_bound_tmp.x = corner.x;
+    for tri in triangle_mesh {
+        for idx in 0..3 {
+            let vertex = tri[idx];
+            if vertex.x < lower_bound_tmp.x {
+                lower_bound_tmp.x = vertex.x;
             }
-            if corner.y < lower_bound_tmp.y {
-                lower_bound_tmp.y = corner.y;
+            if vertex.y < lower_bound_tmp.y {
+                lower_bound_tmp.y = vertex.y;
             }
-            if corner.z < lower_bound_tmp.z {
-                lower_bound_tmp.z = corner.z;
+            if vertex.z < lower_bound_tmp.z {
+                lower_bound_tmp.z = vertex.z;
             }
-            if corner.x > upper_bound_tmp.x {
-                upper_bound_tmp.x = corner.x;
+            if vertex.x > upper_bound_tmp.x {
+                upper_bound_tmp.x = vertex.x;
             }
-            if corner.y > upper_bound_tmp.y {
-                upper_bound_tmp.y = corner.y;
+            if vertex.y > upper_bound_tmp.y {
+                upper_bound_tmp.y = vertex.y;
             }
-            if corner.z > upper_bound_tmp.z {
-                upper_bound_tmp.z = corner.z;
+            if vertex.z > upper_bound_tmp.z {
+                upper_bound_tmp.z = vertex.z;
             }
         }
     }
-    (triangle_mesh, lower_bound_tmp, upper_bound_tmp)
+    (lower_bound_tmp, upper_bound_tmp)
+}
+
+/// Loads mesh from obj file, scales and translates it
+pub fn load_mesh_vertices_from_file(
+    filepath: &str,
+    translation: Vec3,
+    rotation: Vec3,
+    scale: f64,
+) -> Vec<[Vec3; 3]> {
+    let mut model_vertices: Vec<[Vec3; 3]> = Vec::new();
+
+    let loaded_mesh = tobj::load_obj(&Path::new(filepath));
+    assert!(loaded_mesh.is_ok());
+    let (models, _materials) = loaded_mesh.unwrap();
+
+    for (_i, m) in models.iter().enumerate() {
+        let mesh = &m.mesh;
+        assert!(mesh.positions.len() % 3 == 0);
+        let mut triangle_vertices: Vec<Vec3> = vec![Vec3::zero(); 3];
+        for f in 0..mesh.indices.len() / 3 {
+            for idx in 0..3 {
+                let x_idx = 3 * mesh.indices[3 * f + idx];
+                let y_idx = 3 * mesh.indices[3 * f + idx] + 1;
+                let z_idx = 3 * mesh.indices[3 * f + idx] + 2;
+
+                triangle_vertices[idx] = Vec3::new(
+                    mesh.positions[x_idx as usize] as f64 * scale,
+                    mesh.positions[y_idx as usize] as f64 * scale,
+                    mesh.positions[z_idx as usize] as f64 * scale,
+                );
+            }
+            model_vertices.push([
+                triangle_vertices[0].rotate_point(rotation) + translation,
+                triangle_vertices[1].rotate_point(rotation) + translation,
+                triangle_vertices[2].rotate_point(rotation) + translation,
+            ]);
+        }
+    }
+    println!(
+        "Successfully loaded {} triangles from file {}!",
+        model_vertices.len(),
+        filepath
+    );
+    return model_vertices;
 }
 
 /// Loads mesh from obj file, scales and translates it
@@ -181,45 +243,101 @@ impl Intersectable for TriangleMesh {
         }
 
         // current bottleneck: if bounding box is hit, all triangles must be checked for intersection
-        let mut closest_hit_rec = None;
-        let mut closest_so_far = std::f64::MAX;
+        let mut hit_occured = false;
+        let mut closest_ray_param = std::f64::MAX;
+        let mut closest_hit_idx = 0;
 
-        for triangle in &self.triangles {
-            let hit_info_op = triangle.intersect_with_ray(&ray, min_dist, max_dist);
+        for (triangle_idx, triangle_vertices) in self.vertices.iter().enumerate() {
+            let hit_info_op = triangle_soa_intersect_with_ray(
+                &ray,
+                &triangle_vertices,
+                &self.edges[triangle_idx],
+                min_dist,
+                max_dist,
+            );
+
             if hit_info_op.is_some() {
-                let hit_rec = hit_info_op.unwrap();
-                if hit_rec.dist_from_ray_orig < closest_so_far {
-                    closest_so_far = hit_rec.dist_from_ray_orig;
-                    closest_hit_rec = Some(hit_rec);
+                let ray_param_cand = hit_info_op.unwrap();
+                if ray_param_cand < closest_ray_param {
+                    closest_ray_param = ray_param_cand;
+                    hit_occured = true;
+                    closest_hit_idx = triangle_idx;
                 }
             }
         }
-        return closest_hit_rec;
+
+        if hit_occured {
+            let hit_point = ray.point_at(closest_ray_param);
+            let dist_from_ray_orig = (ray.origin - hit_point).length();
+
+            return Some(HitInformation {
+                hit_point: hit_point,
+                hit_normal: self.normals[closest_hit_idx],
+                hit_material: &*self.material,
+                dist_from_ray_orig: dist_from_ray_orig,
+            });
+        } else {
+            return None;
+        }
     }
+}
+
+pub fn triangle_soa_intersect_with_ray(
+    ray: &Ray,
+    vertices: &[Vec3; 3],
+    edges: &[Vec3; 2],
+    min_dist: f64,
+    max_dist: f64,
+) -> Option<f64> {
+    let eps = 0.0000001;
+    let h = ray.direction.cross_product(&edges[1]);
+    let a = edges[0].dot(&h);
+    if -eps < a && a < eps {
+        return None;
+    }
+    let f = 1.0 / a;
+    let s = ray.origin - vertices[0];
+    let u = f * s.dot(&h);
+    if u < 0.0 || u > 1.0 {
+        return None;
+    }
+    let q = s.cross_product(&edges[0]);
+    let v = f * ray.direction.dot(&q);
+    if v < 0.0 || u + v > 1.0 {
+        return None;
+    }
+    // At this stage we can compute t to find out where the intersection point is on the line.
+    let t = f * edges[1].dot(&q);
+    if t > eps
+    // ray intersection
+    {
+        let hit_point = ray.point_at(t);
+        let dist_from_ray_orig = (ray.origin - hit_point).length();
+        if dist_from_ray_orig < min_dist || dist_from_ray_orig > max_dist {
+            return None;
+        } else {
+            return Some(t);
+        }
+    }
+
+    return None;
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{compute_min_max_3d, BasicTriangle, Vec3};
+    use super::{compute_min_max_3d, Vec3};
 
-    use crate::lambertian::Lambertian;
     #[test]
-
     fn test_mesh_aabbox() {
-        let test_tri = Box::new(BasicTriangle::new(
-            [
-                Vec3::new(1.0, 0.0, 0.0),
-                Vec3::new(1.0, 0.0, 1.0),
-                Vec3::new(0.0, 1.0, 0.0),
-            ],
-            Box::new(Lambertian {
-                albedo: Vec3::new(0.5, 0.2, 0.2),
-            }),
-        ));
+        let test_tri = [
+            Vec3::new(1.0, 0.0, 0.0),
+            Vec3::new(1.0, 0.0, 1.0),
+            Vec3::new(0.0, 1.0, 0.0),
+        ];
 
         let tris = vec![test_tri];
 
-        let (_mesh, lower_bound, upper_bound) = compute_min_max_3d(tris);
+        let (lower_bound, upper_bound) = compute_min_max_3d(&tris);
 
         assert_eq!(lower_bound, Vec3::new(0.0, 0.0, 0.0));
         assert_eq!(upper_bound, Vec3::new(1.0, 1.0, 1.0));

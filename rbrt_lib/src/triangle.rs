@@ -15,14 +15,14 @@ impl BasicTriangle {
     pub fn new(corners: [Vec3; 3], material: Box<dyn RayScattering + Sync>) -> BasicTriangle {
         BasicTriangle {
             corners: corners,
-            normal: get_triangle_normal(corners),
+            normal: get_triangle_normal(&corners),
             material: material,
             edges: [corners[1] - corners[0], corners[2] - corners[0]],
         }
     }
 }
 
-pub fn get_triangle_normal(corners: [Vec3; 3]) -> Vec3 {
+pub fn get_triangle_normal(corners: &[Vec3; 3]) -> Vec3 {
     let edge1 = corners[1] - corners[0];
     let edge2 = corners[2] - corners[0];
     let normal = edge1.cross_product(&edge2).normalize();
