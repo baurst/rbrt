@@ -1,7 +1,7 @@
 extern crate tobj;
 use std::path::Path;
 
-use crate::aabbox::BoundingBox;
+use crate::aabbox::{BoundingBox,compute_min_max_3d};
 use crate::lambertian::Lambertian;
 use crate::triangle::{get_triangle_normal, triangle_soa_intersect_with_ray, BasicTriangle};
 use crate::vec3::Vec3;
@@ -49,36 +49,6 @@ impl TriangleMesh {
             material: material,
         };
     }
-}
-
-/// computes the axis aligned bounding box extents of triangles
-pub fn compute_min_max_3d(triangle_mesh: &Vec<[Vec3; 3]>) -> (Vec3, Vec3) {
-    let mut lower_bound_tmp = Vec3::new(std::f64::MAX, std::f64::MAX, std::f64::MAX);
-    let mut upper_bound_tmp = Vec3::new(-std::f64::MAX, -std::f64::MAX, -std::f64::MAX);
-    for tri in triangle_mesh {
-        for idx in 0..3 {
-            let vertex = tri[idx];
-            if vertex.x < lower_bound_tmp.x {
-                lower_bound_tmp.x = vertex.x;
-            }
-            if vertex.y < lower_bound_tmp.y {
-                lower_bound_tmp.y = vertex.y;
-            }
-            if vertex.z < lower_bound_tmp.z {
-                lower_bound_tmp.z = vertex.z;
-            }
-            if vertex.x > upper_bound_tmp.x {
-                upper_bound_tmp.x = vertex.x;
-            }
-            if vertex.y > upper_bound_tmp.y {
-                upper_bound_tmp.y = vertex.y;
-            }
-            if vertex.z > upper_bound_tmp.z {
-                upper_bound_tmp.z = vertex.z;
-            }
-        }
-    }
-    (lower_bound_tmp, upper_bound_tmp)
 }
 
 /// Loads mesh from obj file, scales and translates it
