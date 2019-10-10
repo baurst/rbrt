@@ -24,11 +24,8 @@ mesh_blueprints:
       x: 0.0
       y: 0.0
       z: 0.0
-    material_type: "lambertian"
-    albedo:
-      x: 1.0
-      y: 0.0
-      z: 0.0
+    material_type: "dielectric"
+    material_param: 2.4
 sphere_blueprints:
 # green earth
   - radius: 1000.0 

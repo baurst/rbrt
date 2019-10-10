@@ -2,7 +2,7 @@ extern crate tobj;
 use std::path::Path;
 
 use crate::lambertian::Lambertian;
-use crate::triangle::{get_triangle_normal, BasicTriangle};
+use crate::triangle::{get_triangle_normal, triangle_soa_intersect_with_ray, BasicTriangle};
 use crate::vec3::Vec3;
 use crate::{HitInformation, Intersectable, Ray, RayScattering};
 
@@ -78,7 +78,7 @@ impl TriangleMesh {
         translation: Vec3,
         rotation: Vec3,
         scale: f64,
-        albedo: Vec3,
+        material: Box<dyn RayScattering + Sync>,
     ) -> TriangleMesh {
         let vertices = load_mesh_vertices_from_file(filepath, translation, rotation, scale);
 
@@ -102,7 +102,7 @@ impl TriangleMesh {
             normals: normals,
             edges: edges,
             bbox: BoundingBox::new(lower_bound, upper_bound),
-            material: Box::new(Lambertian { albedo: albedo }),
+            material: material,
         };
     }
 }
@@ -242,11 +242,10 @@ impl Intersectable for TriangleMesh {
             return None;
         }
 
-        // current bottleneck: if bounding box is hit, all triangles must be checked for intersection
         let mut hit_occured = false;
         let mut closest_ray_param = std::f64::MAX;
-        let mut closest_hit_idx = 0;
-
+        // saving the normal here apparently prevents a cache miss later on
+        let mut closes_hit_normal = Vec3::zero();
         for (triangle_idx, triangle_vertices) in self.vertices.iter().enumerate() {
             let hit_info_op = triangle_soa_intersect_with_ray(
                 &ray,
@@ -261,7 +260,7 @@ impl Intersectable for TriangleMesh {
                 if ray_param_cand < closest_ray_param {
                     closest_ray_param = ray_param_cand;
                     hit_occured = true;
-                    closest_hit_idx = triangle_idx;
+                    closes_hit_normal = self.normals[triangle_idx];
                 }
             }
         }
@@ -272,7 +271,7 @@ impl Intersectable for TriangleMesh {
 
             return Some(HitInformation {
                 hit_point: hit_point,
-                hit_normal: self.normals[closest_hit_idx],
+                hit_normal: closes_hit_normal,
                 hit_material: &*self.material,
                 dist_from_ray_orig: dist_from_ray_orig,
             });
@@ -280,47 +279,6 @@ impl Intersectable for TriangleMesh {
             return None;
         }
     }
-}
-
-pub fn triangle_soa_intersect_with_ray(
-    ray: &Ray,
-    vertices: &[Vec3; 3],
-    edges: &[Vec3; 2],
-    min_dist: f64,
-    max_dist: f64,
-) -> Option<f64> {
-    let eps = 0.0000001;
-    let h = ray.direction.cross_product(&edges[1]);
-    let a = edges[0].dot(&h);
-    if -eps < a && a < eps {
-        return None;
-    }
-    let f = 1.0 / a;
-    let s = ray.origin - vertices[0];
-    let u = f * s.dot(&h);
-    if u < 0.0 || u > 1.0 {
-        return None;
-    }
-    let q = s.cross_product(&edges[0]);
-    let v = f * ray.direction.dot(&q);
-    if v < 0.0 || u + v > 1.0 {
-        return None;
-    }
-    // At this stage we can compute t to find out where the intersection point is on the line.
-    let t = f * edges[1].dot(&q);
-    if t > eps
-    // ray intersection
-    {
-        let hit_point = ray.point_at(t);
-        let dist_from_ray_orig = (ray.origin - hit_point).length();
-        if dist_from_ray_orig < min_dist || dist_from_ray_orig > max_dist {
-            return None;
-        } else {
-            return Some(t);
-        }
-    }
-
-    return None;
 }
 
 #[cfg(test)]

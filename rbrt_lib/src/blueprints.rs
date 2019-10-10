@@ -94,29 +94,24 @@ pub fn load_blueprints_from_yaml_file(filepath: &str) -> SceneBlueprint {
 }
 
 fn parse_mesh_bp(mesh_bp: TriangleMeshBlueprint) -> Option<TriangleMesh> {
-    let _mat_box_op = create_material_from_description(
+    let mat_box_op = create_material_from_description(
         &mesh_bp.material_type,
         mesh_bp.albedo,
         mesh_bp.material_param,
     );
-
-    let albedo = match mesh_bp.albedo {
-        Some(content) => content,
-        None => {
-            panic!(
-                "Meshes don't support anything but lambertian materials right now, please provide albedo!"
-            );
-        }
-    };
-
-    let tri_mesh = Some(TriangleMesh::new(
-        &mesh_bp.obj_filepath,
-        mesh_bp.translation,
-        mesh_bp.rotation_rad,
-        mesh_bp.scale,
-        albedo,
-    ));
-    return tri_mesh;
+    if mat_box_op.is_some() {
+        let tri_mesh = Some(TriangleMesh::new(
+            &mesh_bp.obj_filepath,
+            mesh_bp.translation,
+            mesh_bp.rotation_rad,
+            mesh_bp.scale,
+            mat_box_op.unwrap(),
+        ));
+        return tri_mesh;
+    } else {
+        println!("Failed to parse material info provided with mesh!");
+        return None;
+    }
 }
 
 fn parse_sphere_bp(sphere_bp: SphereBlueprint) -> Option<Sphere> {
