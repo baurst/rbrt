@@ -1,5 +1,6 @@
-# Rustracer
-[![Build Status](https://travis-ci.com/baurst/rustracer.svg?token=KGmoNyosUqTq92iqGZE9&branch=master)](https://travis-ci.com/baurst/rustracer)
+# Rust Based Ray Tracer
+
+[![Build Status](https://travis-ci.com/baurst/rbrt.svg?token=KGmoNyosUqTq92iqGZE9&branch=master)](https://travis-ci.com/baurst/rbrt)
 
 This is yet another raytracer written in Rust. Coming from C++, Rusts ownership concepts (and easy way of managing dependencies and cross-platform builds) fascinated me and so I thought it could be fun to write a lightweight but capable raytracer to get to know the language better.
 The inspiration for this project came from the excellent book ['Raytracing In One Weekend'](https://raytracing.github.io) by Peter Shirley as well as ssloys awesome [tinyraytracer](https://github.com/ssloy/tinyraytracer).
@@ -12,15 +13,15 @@ The inspiration for this project came from the excellent book ['Raytracing In On
 
 ## Try it out!
 ```bash
-git clone https://github.com/baurst/rustracer.git
-cd rustracer
+git clone https://github.com/baurst/rbrt.git
+cd rbrt
 cargo build --release
 
 # download the stanford bunny
 wget http://graphics.stanford.edu/~mdfisher/Data/Meshes/bunny.obj
 
 # run the raytracer: adjust samples according to your needs
-./target/release/rustracer --target_file out.png --height 768 --width 1024 --samples 50 --config scenes/example_scene.yaml
+./target/release/rbrt --target_file out.png --height 768 --width 1024 --samples 50 --config scenes/example_scene.yaml
 ```
 
 ## Coordinate System

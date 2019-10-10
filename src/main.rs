@@ -1,15 +1,13 @@
 extern crate clap;
-extern crate rustracer_lib;
+extern crate rbrt_lib;
 use clap::{App, Arg};
 
-use rustracer_lib::blueprints::{
-    create_scene_from_scene_blueprint, load_blueprints_from_yaml_file,
-};
+use rbrt_lib::blueprints::{create_scene_from_scene_blueprint, load_blueprints_from_yaml_file};
 
-use rustracer_lib::cam::Camera;
+use rbrt_lib::cam::Camera;
 
 fn main() {
-    let app = App::new("rustracer")
+    let app = App::new("rbrt")
         .version("0.1")
         .author("baurst")
         .about("a lighweight raytracer written in rust")
@@ -85,7 +83,7 @@ fn main() {
 
     let scene = create_scene_from_scene_blueprint(scene_bp);
 
-    let img_buf = rustracer_lib::render_scene(cam, num_samples, scene);
+    let img_buf = rbrt_lib::render_scene(cam, num_samples, scene);
 
     img_buf.save(target_image_path).expect(&format!(
         "Unable to save target img to {}! Maybe the directory does not exist?",

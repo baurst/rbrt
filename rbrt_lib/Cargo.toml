@@ -1,7 +1,7 @@
 [package]                                                                       
-name = "rustracer_lib"                                                                  
+name = "rbrt_lib"                                                                  
 version = "0.1.0"                                                               
-authors = ["Stefan Andreas Baur <stefan.a.baur@gmail.com>"]             
+authors = ["Stefan Baur <stefan.a.baur@gmail.com>"]             
 edition = "2018"                                                                
                                                                                 
                                                                                 

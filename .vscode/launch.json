@@ -8,15 +8,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'rustracer'",
+            "name": "Debug executable 'rbrt'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=rustracer",
-                    "--package=rustracer"
+                    "--bin=rbrt",
+                    "--package=rbrt"
                 ],
                 "filter": {
-                    "name": "rustracer",
+                    "name": "rbrt",
                     "kind": "bin"
                 }
             },
@@ -26,16 +26,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'rustracer'",
+            "name": "Debug unit tests in executable 'rbrt'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=rustracer",
-                    "--package=rustracer"
+                    "--bin=rbrt",
+                    "--package=rbrt"
                 ],
                 "filter": {
-                    "name": "rustracer",
+                    "name": "rbrt",
                     "kind": "bin"
                 }
             },
@@ -45,16 +45,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'rustracer_lib'",
+            "name": "Debug unit tests in library 'rbrt_lib'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=rustracer_lib"
+                    "--package=rbrt_lib"
                 ],
                 "filter": {
-                    "name": "rustracer_lib",
+                    "name": "rbrt_lib",
                     "kind": "lib"
                 }
             },

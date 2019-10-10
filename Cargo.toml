@@ -1,5 +1,5 @@
 [package]
-name = "rustracer"
+name = "rbrt"
 version = "0.1.0"
 authors = ["Stefan Baur <stefan.a.baur@gmail.com>"]
 edition = "2018"
@@ -9,6 +9,6 @@ edition = "2018"
 [workspace]
 
 [dependencies]
-rustracer_lib = {path = "rustracer_lib"}
+rbrt_lib = {path = "rbrt_lib"}
 clap = "2"
 image = "0.12"
