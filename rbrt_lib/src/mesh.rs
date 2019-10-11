@@ -1,7 +1,7 @@
 extern crate tobj;
 use std::path::Path;
 
-use crate::aabbox::{BoundingBox,compute_min_max_3d};
+use crate::aabbox::{compute_min_max_3d, BoundingBox};
 use crate::lambertian::Lambertian;
 use crate::triangle::{get_triangle_normal, triangle_soa_intersect_with_ray, BasicTriangle};
 use crate::vec3::Vec3;
@@ -21,7 +21,7 @@ impl TriangleMesh {
         filepath: &str,
         translation: Vec3,
         rotation: Vec3,
-        scale: f64,
+        scale: f32,
         material: Box<dyn RayScattering + Sync>,
     ) -> TriangleMesh {
         let vertices = load_mesh_vertices_from_file(filepath, translation, rotation, scale);
@@ -56,7 +56,7 @@ pub fn load_mesh_vertices_from_file(
     filepath: &str,
     translation: Vec3,
     rotation: Vec3,
-    scale: f64,
+    scale: f32,
 ) -> Vec<[Vec3; 3]> {
     let mut model_vertices: Vec<[Vec3; 3]> = Vec::new();
 
@@ -75,9 +75,9 @@ pub fn load_mesh_vertices_from_file(
                 let z_idx = 3 * mesh.indices[3 * f + idx] + 2;
 
                 triangle_vertices[idx] = Vec3::new(
-                    mesh.positions[x_idx as usize] as f64 * scale,
-                    mesh.positions[y_idx as usize] as f64 * scale,
-                    mesh.positions[z_idx as usize] as f64 * scale,
+                    mesh.positions[x_idx as usize] as f32 * scale,
+                    mesh.positions[y_idx as usize] as f32 * scale,
+                    mesh.positions[z_idx as usize] as f32 * scale,
                 );
             }
             model_vertices.push([
@@ -100,7 +100,7 @@ pub fn load_mesh_from_file(
     filepath: &str,
     translation: Vec3,
     rotation: Vec3,
-    scale: f64,
+    scale: f32,
     albedo: Vec3,
 ) -> Vec<Box<BasicTriangle>> {
     let mut model_elements: Vec<Box<BasicTriangle>> = Vec::new();
@@ -120,9 +120,9 @@ pub fn load_mesh_from_file(
                 let z_idx = 3 * mesh.indices[3 * f + idx] + 2;
 
                 triangle_vertices[idx] = Vec3::new(
-                    mesh.positions[x_idx as usize] as f64 * scale,
-                    mesh.positions[y_idx as usize] as f64 * scale,
-                    mesh.positions[z_idx as usize] as f64 * scale,
+                    mesh.positions[x_idx as usize] as f32 * scale,
+                    mesh.positions[y_idx as usize] as f32 * scale,
+                    mesh.positions[z_idx as usize] as f32 * scale,
                 );
             }
             let tri = Box::new(BasicTriangle::new(
@@ -148,8 +148,8 @@ impl Intersectable for TriangleMesh {
     fn intersect_with_ray<'a>(
         &'a self,
         ray: &Ray,
-        min_dist: f64,
-        max_dist: f64,
+        min_dist: f32,
+        max_dist: f32,
     ) -> Option<HitInformation> {
         // first check if bounding box is hit
         if !self.bbox.hit(ray) {
@@ -157,7 +157,7 @@ impl Intersectable for TriangleMesh {
         }
 
         let mut hit_occured = false;
-        let mut closest_ray_param = std::f64::MAX;
+        let mut closest_ray_param = std::f32::MAX;
         // saving the normal here apparently prevents a cache miss later on
         let mut closes_hit_normal = Vec3::zero();
         for (triangle_idx, triangle_vertices) in self.vertices.iter().enumerate() {

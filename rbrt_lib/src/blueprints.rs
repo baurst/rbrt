@@ -15,21 +15,21 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TriangleMeshBlueprint {
     pub obj_filepath: String,
-    pub scale: f64,
+    pub scale: f32,
     pub translation: Vec3,
     pub rotation_rad: Vec3,
     pub material_type: String,
     pub albedo: Option<Vec3>,
-    pub material_param: Option<f64>,
+    pub material_param: Option<f32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SphereBlueprint {
-    pub radius: f64,
+    pub radius: f32,
     pub center: Vec3,
     pub material_type: String,
     pub albedo: Option<Vec3>,
-    pub material_param: Option<f64>,
+    pub material_param: Option<f32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -37,7 +37,7 @@ pub struct CameraBluePrint {
     pub camera_up: Vec3,
     pub camera_look_at: Vec3,
     pub camera_position: Vec3,
-    pub camera_focal_length_mm: f64,
+    pub camera_focal_length_mm: f32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -50,7 +50,7 @@ pub struct SceneBlueprint {
 fn create_material_from_description(
     mat_type: &str,
     albedo: Option<Vec3>,
-    material_param: Option<f64>,
+    material_param: Option<f32>,
 ) -> Option<Box<dyn RayScattering + std::marker::Sync + 'static>> {
     if mat_type.to_lowercase().contains("metal") {
         return Some(Box::new(Metal {

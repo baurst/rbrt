@@ -14,16 +14,16 @@ pub trait RayScattering {
 pub fn random_point_in_unit_sphere() -> Vec3 {
     let mut point =
         2.0 * Vec3::new(
-            rand::random::<f64>(),
-            rand::random::<f64>(),
-            rand::random::<f64>(),
+            rand::random::<f32>(),
+            rand::random::<f32>(),
+            rand::random::<f32>(),
         ) - Vec3::new(1.0, 1.0, 1.0);
     while point.length() > 1.0 {
         point =
             2.0 * Vec3::new(
-                rand::random::<f64>(),
-                rand::random::<f64>(),
-                rand::random::<f64>(),
+                rand::random::<f32>(),
+                rand::random::<f32>(),
+                rand::random::<f32>(),
             ) - Vec3::new(1.0, 1.0, 1.0);
     }
     return point;
@@ -55,10 +55,7 @@ mod tests {
         let incoming = Vec3::new(1.0, 1.0, 0.0);
         let normal = Vec3::new(-1.0, 0.0, 0.0);
         let refl = reflect(&incoming, &normal);
-        assert_eq!(
-            refl,
-            Vec3::new(-0.7071067811865476, 0.7071067811865476, 0.0)
-        );
+        assert_eq!(refl, Vec3::new(-0.7071068, 0.7071068, 0.0));
     }
 
 }

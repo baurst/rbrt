@@ -4,9 +4,9 @@ use std::ops::{Add, AddAssign, Mul, Sub};
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct Vec3 {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
 }
 
 impl Sub for Vec3 {
@@ -63,7 +63,7 @@ impl Mul<Vec3> for Vec3 {
     }
 }
 
-impl Mul<Vec3> for f64 {
+impl Mul<Vec3> for f32 {
     type Output = Vec3;
 
     fn mul(self, other: Vec3) -> Vec3 {
@@ -75,10 +75,10 @@ impl Mul<Vec3> for f64 {
     }
 }
 
-impl Mul<f64> for Vec3 {
+impl Mul<f32> for Vec3 {
     type Output = Vec3;
 
-    fn mul(self, other: f64) -> Vec3 {
+    fn mul(self, other: f32) -> Vec3 {
         Vec3 {
             x: self.x * other,
             y: self.y * other,
@@ -94,7 +94,7 @@ impl PartialEq for Vec3 {
 }
 
 impl Vec3 {
-    pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
+    pub fn new(x: f32, y: f32, z: f32) -> Vec3 {
         Vec3 { x: x, y: y, z: z }
     }
     pub fn zero() -> Vec3 {
@@ -104,10 +104,10 @@ impl Vec3 {
             z: 0.0,
         }
     }
-    pub fn length(&self) -> f64 {
+    pub fn length(&self) -> f32 {
         return (self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
     }
-    pub fn sum(&self) -> f64 {
+    pub fn sum(&self) -> f32 {
         return self.x + self.y + self.z;
     }
     pub fn normalize(&self) -> Vec3 {
@@ -148,7 +148,7 @@ impl Vec3 {
         return res;
     }
 
-    pub fn dot(&self, other: &Vec3) -> f64 {
+    pub fn dot(&self, other: &Vec3) -> f32 {
         return (*self * *other).sum();
     }
 }
@@ -224,98 +224,98 @@ mod tests {
                 // point
                 Vec3::new(1.0, 0.0, 0.0),
                 // rotation
-                Vec3::new(0.0, 0.0, (45.0 as f32).to_radians() as f64),
+                Vec3::new(0.0, 0.0, (45.0 as f32).to_radians() as f32),
                 // expected point
                 Vec3::new(a, a, 0.0),
             ),
             RotTest::new(
                 Vec3::new(1.0, 0.0, 0.0),
-                Vec3::new(0.0, 0.0, (-45.0 as f32).to_radians() as f64),
+                Vec3::new(0.0, 0.0, (-45.0 as f32).to_radians() as f32),
                 Vec3::new(a, -a, 0.0),
             ),
             RotTest::new(
                 Vec3::new(0.0, 1.0, 0.0),
-                Vec3::new(0.0, 0.0, (45.0 as f32).to_radians() as f64),
+                Vec3::new(0.0, 0.0, (45.0 as f32).to_radians() as f32),
                 Vec3::new(-a, a, 0.0),
             ),
             RotTest::new(
                 Vec3::new(0.0, 1.0, 0.0),
-                Vec3::new(0.0, 0.0, (-45.0 as f32).to_radians() as f64),
+                Vec3::new(0.0, 0.0, (-45.0 as f32).to_radians() as f32),
                 Vec3::new(a, a, 0.0),
             ),
             RotTest::new(
                 Vec3::new(0.0, 0.0, 1.0),
-                Vec3::new(0.0, 0.0, (45.0 as f32).to_radians() as f64),
+                Vec3::new(0.0, 0.0, (45.0 as f32).to_radians() as f32),
                 Vec3::new(0.0, 0.0, 1.0),
             ),
             RotTest::new(
                 Vec3::new(0.0, 0.0, 1.0),
-                Vec3::new(0.0, 0.0, (-45.0 as f32).to_radians() as f64),
+                Vec3::new(0.0, 0.0, (-45.0 as f32).to_radians() as f32),
                 Vec3::new(0.0, 0.0, 1.0),
             ),
             RotTest::new(
                 Vec3::new(1.0, 0.0, 0.0),
-                Vec3::new(0.0, (45.0 as f32).to_radians() as f64, 0.0),
+                Vec3::new(0.0, (45.0 as f32).to_radians() as f32, 0.0),
                 Vec3::new(1.0, 0.0, 0.0),
             ),
             RotTest::new(
                 Vec3::new(1.0, 0.0, 0.0),
-                Vec3::new(0.0, (-45.0 as f32).to_radians() as f64, 0.0),
+                Vec3::new(0.0, (-45.0 as f32).to_radians() as f32, 0.0),
                 Vec3::new(1.0, 0.0, 0.0),
             ),
             RotTest::new(
                 Vec3::new(0.0, 1.0, 0.0),
-                Vec3::new(0.0, (45.0 as f32).to_radians() as f64, 0.0),
+                Vec3::new(0.0, (45.0 as f32).to_radians() as f32, 0.0),
                 Vec3::new(0.0, a, a),
             ),
             RotTest::new(
                 Vec3::new(0.0, 1.0, 0.0),
-                Vec3::new(0.0, (-45.0 as f32).to_radians() as f64, 0.0),
+                Vec3::new(0.0, (-45.0 as f32).to_radians() as f32, 0.0),
                 Vec3::new(0.0, a, -a),
             ),
             RotTest::new(
                 Vec3::new(0.0, 0.0, 1.0),
-                Vec3::new(0.0, (45.0 as f32).to_radians() as f64, 0.0),
+                Vec3::new(0.0, (45.0 as f32).to_radians() as f32, 0.0),
                 Vec3::new(0.0, -a, a),
             ),
             RotTest::new(
                 Vec3::new(0.0, 0.0, 1.0),
-                Vec3::new(0.0, (-45.0 as f32).to_radians() as f64, 0.0),
+                Vec3::new(0.0, (-45.0 as f32).to_radians() as f32, 0.0),
                 Vec3::new(0.0, a, a),
             ),
             RotTest::new(
                 Vec3::new(1.0, 0.0, 0.0),
-                Vec3::new((45.0 as f32).to_radians() as f64, 0.0, 0.0),
+                Vec3::new((45.0 as f32).to_radians() as f32, 0.0, 0.0),
                 Vec3::new(a, a, 0.0),
             ),
             RotTest::new(
                 Vec3::new(1.0, 0.0, 0.0),
-                Vec3::new((-45.0 as f32).to_radians() as f64, 0.0, 0.0),
+                Vec3::new((-45.0 as f32).to_radians() as f32, 0.0, 0.0),
                 Vec3::new(a, -a, 0.0),
             ),
             RotTest::new(
                 Vec3::new(0.0, 1.0, 0.0),
-                Vec3::new((45.0 as f32).to_radians() as f64, 0.0, 0.0),
+                Vec3::new((45.0 as f32).to_radians() as f32, 0.0, 0.0),
                 Vec3::new(-a, a, 0.0),
             ),
             RotTest::new(
                 Vec3::new(0.0, 1.0, 0.0),
-                Vec3::new((-45.0 as f32).to_radians() as f64, 0.0, 0.0),
+                Vec3::new((-45.0 as f32).to_radians() as f32, 0.0, 0.0),
                 Vec3::new(a, a, 0.0),
             ),
             RotTest::new(
                 Vec3::new(0.0, 0.0, 1.0),
-                Vec3::new((45.0 as f32).to_radians() as f64, 0.0, 0.0),
+                Vec3::new((45.0 as f32).to_radians() as f32, 0.0, 0.0),
                 Vec3::new(0.0, 0.0, 1.0),
             ),
             RotTest::new(
                 Vec3::new(0.0, 0.0, 1.0),
-                Vec3::new((45.0 as f32).to_radians() as f64, 0.0, 0.0),
+                Vec3::new((45.0 as f32).to_radians() as f32, 0.0, 0.0),
                 Vec3::new(0.0, 0.0, 1.0),
             ),
             RotTest::new(
                 Vec3::new(0.0, 0.0, 1.0),
-                Vec3::new((-45.0 as f32).to_radians() as f64, 0.0, 0.0),
+                Vec3::new((-45.0 as f32).to_radians() as f32, 0.0, 0.0),
                 Vec3::new(0.0, 0.0, 1.0),
             ),
         ];

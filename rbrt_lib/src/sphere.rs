@@ -5,7 +5,7 @@ use crate::{HitInformation, Intersectable, Ray, RayScattering};
 
 pub struct Sphere {
     pub center: Vec3,
-    pub radius: f64,
+    pub radius: f32,
     pub material: Box<dyn RayScattering + Sync>,
 }
 
@@ -20,8 +20,8 @@ impl Intersectable for Sphere {
     fn intersect_with_ray<'a>(
         &'a self,
         ray: &Ray,
-        min_dist: f64,
-        max_dist: f64,
+        min_dist: f32,
+        max_dist: f32,
     ) -> Option<HitInformation> {
         let a = ray.direction.dot(&ray.direction);
         let l = ray.origin - self.center;

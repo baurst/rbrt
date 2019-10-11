@@ -16,9 +16,9 @@ pub struct Scene {
 }
 
 impl Scene {
-    pub fn hit<'a>(&'a self, ray: &Ray, min_dist: f64, max_dist: f64) -> Option<HitInformation> {
+    pub fn hit<'a>(&'a self, ray: &Ray, min_dist: f32, max_dist: f32) -> Option<HitInformation> {
         let mut closest_hit_rec = None;
-        let mut closest_so_far = std::f64::MAX;
+        let mut closest_so_far = std::f32::MAX;
 
         for sphere in &self.elements {
             let hit_info_op = sphere.intersect_with_ray(&ray, min_dist, max_dist);

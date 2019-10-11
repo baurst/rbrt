@@ -33,9 +33,9 @@ pub fn triangle_soa_intersect_with_ray(
     ray: &Ray,
     vertices: &[Vec3; 3],
     edges: &[Vec3; 2],
-    min_dist: f64,
-    max_dist: f64,
-) -> Option<f64> {
+    min_dist: f32,
+    max_dist: f32,
+) -> Option<f32> {
     let eps = 0.0000001;
     let h = ray.direction.cross_product(&edges[1]);
     let a = edges[0].dot(&h);
@@ -75,8 +75,8 @@ impl Intersectable for BasicTriangle {
     fn intersect_with_ray<'a>(
         &'a self,
         ray: &Ray,
-        min_dist: f64,
-        max_dist: f64,
+        min_dist: f32,
+        max_dist: f32,
     ) -> Option<HitInformation> {
         let ray_param_op =
             triangle_soa_intersect_with_ray(&ray, &self.corners, &self.edges, min_dist, max_dist);

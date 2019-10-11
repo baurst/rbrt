@@ -30,11 +30,11 @@ pub struct HitInformation<'a> {
     pub hit_point: Vec3,
     pub hit_normal: Vec3,
     pub hit_material: &'a dyn RayScattering,
-    pub dist_from_ray_orig: f64,
+    pub dist_from_ray_orig: f32,
 }
 
 pub trait Intersectable: Sync {
-    fn intersect_with_ray(&self, ray: &Ray, min_dist: f64, max_dist: f64)
+    fn intersect_with_ray(&self, ray: &Ray, min_dist: f32, max_dist: f32)
         -> Option<HitInformation>;
 }
 
@@ -95,7 +95,7 @@ pub fn render_scene(
 
                         color += colorize(&ray, &scene, &bg_color, 50);
                     }
-                    color = color * (1.0 / num_samples as f64);
+                    color = color * (1.0 / num_samples as f32);
                     color
                 })
                 .collect();
@@ -103,7 +103,7 @@ pub fn render_scene(
 
             print!(
                 "\rRendering {:.1}% complete!",
-                prog as f64 / cam.img_width_pix as f64 * 100.0
+                prog as f32 / cam.img_width_pix as f32 * 100.0
             );
             col
         })
