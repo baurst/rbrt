@@ -57,5 +57,4 @@ mod tests {
         let refl = reflect(&incoming, &normal);
         assert_eq!(refl, Vec3::new(-0.7071068, 0.7071068, 0.0));
     }
-
 }

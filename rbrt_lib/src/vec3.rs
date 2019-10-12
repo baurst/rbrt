@@ -11,7 +11,7 @@ pub struct Vec3 {
 
 impl Sub for Vec3 {
     type Output = Vec3;
-
+    #[inline]
     fn sub(self, other: Vec3) -> Vec3 {
         Vec3 {
             x: self.x - other.x,
@@ -23,6 +23,7 @@ impl Sub for Vec3 {
 impl Add for Vec3 {
     type Output = Vec3;
 
+    #[inline]
     fn add(self, other: Vec3) -> Vec3 {
         Vec3 {
             x: self.x + other.x,
@@ -31,8 +32,9 @@ impl Add for Vec3 {
         }
     }
 }
-
 impl AddAssign for Vec3 {
+    #[inline]
+
     fn add_assign(&mut self, other: Self) {
         *self = Self {
             x: self.x + other.x,
@@ -42,6 +44,7 @@ impl AddAssign for Vec3 {
     }
 }
 impl AddAssign<&Vec3> for Vec3 {
+    #[inline]
     fn add_assign(&mut self, other: &Self) {
         *self = Self {
             x: self.x + other.x,
@@ -50,10 +53,9 @@ impl AddAssign<&Vec3> for Vec3 {
         };
     }
 }
-
 impl Mul<Vec3> for Vec3 {
     type Output = Vec3;
-
+    #[inline]
     fn mul(self, other: Vec3) -> Vec3 {
         Vec3 {
             x: self.x * other.x,
@@ -62,10 +64,9 @@ impl Mul<Vec3> for Vec3 {
         }
     }
 }
-
 impl Mul<Vec3> for f32 {
     type Output = Vec3;
-
+    #[inline]
     fn mul(self, other: Vec3) -> Vec3 {
         Vec3 {
             x: self * other.x,
@@ -77,7 +78,7 @@ impl Mul<Vec3> for f32 {
 
 impl Mul<f32> for Vec3 {
     type Output = Vec3;
-
+    #[inline]
     fn mul(self, other: f32) -> Vec3 {
         Vec3 {
             x: self.x * other,
@@ -88,15 +89,18 @@ impl Mul<f32> for Vec3 {
 }
 
 impl PartialEq for Vec3 {
+    #[inline]
     fn eq(&self, other: &Vec3) -> bool {
         self.x == other.x && self.y == other.y && self.z == other.z
     }
 }
 
 impl Vec3 {
+    #[inline]
     pub fn new(x: f32, y: f32, z: f32) -> Vec3 {
         Vec3 { x: x, y: y, z: z }
     }
+    #[inline]
     pub fn zero() -> Vec3 {
         Vec3 {
             x: 0.0,
@@ -104,12 +108,15 @@ impl Vec3 {
             z: 0.0,
         }
     }
+    #[inline]
     pub fn length(&self) -> f32 {
         return (self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
     }
+    #[inline]
     pub fn sum(&self) -> f32 {
         return self.x + self.y + self.z;
     }
+    #[inline]
     pub fn normalize(&self) -> Vec3 {
         let len = self.length();
         let vec = Vec3 {
@@ -119,6 +126,7 @@ impl Vec3 {
         };
         return vec;
     }
+    #[inline]
     pub fn cross_product(&self, other: &Vec3) -> Vec3 {
         Vec3::new(
             self.y * other.z - self.z * other.y,
@@ -128,7 +136,8 @@ impl Vec3 {
     }
 
     /// rotate a point Z,X,Z
-    /// angles in radians
+    /// angles in radian     
+    #[inline]
     pub fn rotate_point(&self, rot: Vec3) -> Vec3 {
         let s_x = rot.x.sin();
         let s_y = rot.y.sin();
@@ -147,7 +156,7 @@ impl Vec3 {
         );
         return res;
     }
-
+    #[inline]
     pub fn dot(&self, other: &Vec3) -> f32 {
         return (*self * *other).sum();
     }
