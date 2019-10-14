@@ -11,9 +11,12 @@ use crate::vec3::Vec3;
 use crate::{HitInformation, Intersectable, Ray, RayScattering};
 
 pub struct TriangleMesh {
-    pub vertices: Vec<[Vec3; 3]>,
-    pub normals: Vec<Vec3>,
-    pub edges: Vec<[Vec3; 2]>,
+    // 3 vertices with 3 coords (x,y,z) each
+    pub vertices: [[Vec<f32>; 3]; 3],
+    // 2 edges with 3 coords (x,y,z) each
+    pub edges: [[Vec<f32>; 3]; 2],
+    // 1 normal with 3 coords (x,y,z) each
+    pub normals: [Vec<f32>; 3],
 
     pub bbox: BoundingBox,
     pub material: Box<dyn RayScattering + Sync>,
@@ -27,22 +30,55 @@ impl TriangleMesh {
         scale: f32,
         material: Box<dyn RayScattering + Sync>,
     ) -> TriangleMesh {
-        let vertices = load_mesh_vertices_from_file(filepath, translation, rotation, scale);
+        let pre_vertices = load_mesh_vertices_from_file(filepath, translation, rotation, scale);
 
-        let mut normals = vec![];
-        for triangle_vertices in &vertices {
-            normals.push(get_triangle_normal(&triangle_vertices));
+        let mut pre_normals = vec![];
+        for triangle_vertices in &pre_vertices {
+            pre_normals.push(get_triangle_normal(&triangle_vertices));
         }
 
-        let mut edges = vec![];
-        for triangle_vertices in &vertices {
-            edges.push([
+        let mut pre_edges = vec![];
+        for triangle_vertices in &pre_vertices {
+            pre_edges.push([
                 triangle_vertices[1] - triangle_vertices[0],
                 triangle_vertices[2] - triangle_vertices[0],
             ]);
         }
 
-        let (lower_bound, upper_bound) = compute_min_max_3d(&vertices);
+        let (lower_bound, upper_bound) = compute_min_max_3d(&pre_vertices);
+        let mut vertices: [[Vec<f32>; 3]; 3] = [
+            [vec![], vec![], vec![]],
+            [vec![], vec![], vec![]],
+            [vec![], vec![], vec![]],
+        ];
+
+        for vertex in pre_vertices {
+            vertices[0][0].push(vertex[0].x);
+            vertices[0][1].push(vertex[0].y);
+            vertices[0][2].push(vertex[0].z);
+            vertices[1][0].push(vertex[1].x);
+            vertices[1][1].push(vertex[1].y);
+            vertices[1][2].push(vertex[1].z);
+            vertices[2][0].push(vertex[2].x);
+            vertices[2][1].push(vertex[2].y);
+            vertices[2][2].push(vertex[2].z);
+        }
+        let mut edges: [[Vec<f32>; 3]; 2] = [[vec![], vec![], vec![]], [vec![], vec![], vec![]]];
+        for edge in pre_edges {
+            edges[0][0].push(edge[0].x);
+            edges[0][1].push(edge[0].y);
+            edges[0][2].push(edge[0].z);
+            edges[1][0].push(edge[1].x);
+            edges[1][1].push(edge[1].y);
+            edges[1][2].push(edge[1].z);
+        }
+
+        let mut normals: [Vec<f32>; 3] = [vec![], vec![], vec![]];
+        for normal in pre_normals {
+            normals[0].push(normal.x);
+            normals[1].push(normal.y);
+            normals[2].push(normal.z);
+        }
 
         return TriangleMesh {
             vertices: vertices,
@@ -177,7 +213,11 @@ impl Intersectable for TriangleMesh {
                 if ray_param_cand < closest_ray_param {
                     closest_ray_param = ray_param_cand;
                     hit_occured = true;
-                    closes_hit_normal = self.normals[triangle_idx as usize];
+                    closes_hit_normal = Vec3::new(
+                        closes_hit_normal.x,
+                        closes_hit_normal.y,
+                        closes_hit_normal.z,
+                    );
                 }
             }
 
@@ -187,7 +227,11 @@ impl Intersectable for TriangleMesh {
 
                 return Some(HitInformation {
                     hit_point: hit_point,
-                    hit_normal: closes_hit_normal,
+                    hit_normal: Vec3::new(
+                        closes_hit_normal.x,
+                        closes_hit_normal.y,
+                        closes_hit_normal.z,
+                    ),
                     hit_material: &*self.material,
                     dist_from_ray_orig: dist_from_ray_orig,
                 });

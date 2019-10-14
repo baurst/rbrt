@@ -91,8 +91,8 @@ pub unsafe fn sse_cross_product(a: __m128, b: __m128) -> __m128 {
 }
 pub unsafe fn triangle_soa_sse_intersect_with_ray(
     ray: &Ray,
-    vertices: &Vec<[Vec3; 3]>,
-    edges: &Vec<[Vec3; 2]>,
+    vertices: &[[Vec<f32>;3];3],
+    edges: &[[Vec<f32>;3];2],
     min_dist: f32,
     max_dist: f32,
 ) -> (Option<f32>, Option<u32>) {
@@ -110,10 +110,17 @@ pub unsafe fn triangle_soa_sse_intersect_with_ray(
     let rd_y = _mm_set_ps1(ray.direction.y);
     let rd_z = _mm_set_ps1(ray.direction.z);
 
-    for (tri_verts, tri_edges) in vertices
+    for ((((verts_a, verts_b), verts_c), egdes_a), edges_b) in vertices[0]
         .chunks(4)
-        .zip(edges.chunks(4))
-    {}
+        .zip(vertices[1].chunks(4))
+        .zip(vertices[2].chunks(4))
+        .zip(edges[0].chunks(4))
+        .zip(edges[1].chunks(4))
+    {
+    
+    // let h = ray.direction.cross_product(&edges[1]);
+    //
+    }
     return (None, None);
 }
 
