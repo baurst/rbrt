@@ -110,13 +110,43 @@ pub unsafe fn triangle_soa_sse_intersect_with_ray(
     let rd_y = _mm_set_ps1(ray.direction.y);
     let rd_z = _mm_set_ps1(ray.direction.z);
 
-    for ((((verts_a, verts_b), verts_c), egdes_a), edges_b) in vertices[0]
+    for ((((((((((((((vert_ax, vert_ay), vert_az), vert_bx), vert_by), vert_bz), vert_cx), vert_cy),vert_cz), edge_ax), edge_ay), edge_az), edge_bx), edge_by), edge_bz) in vertices[0][0]
         .chunks(4)
-        .zip(vertices[1].chunks(4))
-        .zip(vertices[2].chunks(4))
-        .zip(edges[0].chunks(4))
-        .zip(edges[1].chunks(4))
+        .zip(vertices[0][1].chunks(4))
+        .zip(vertices[0][2].chunks(4))
+        .zip(vertices[1][0].chunks(4))
+        .zip(vertices[1][1].chunks(4))
+        .zip(vertices[1][2].chunks(4))
+        .zip(vertices[2][0].chunks(4))
+        .zip(vertices[2][1].chunks(4))
+        .zip(vertices[2][2].chunks(4))
+        .zip(edges[0][0].chunks(4))
+        .zip(edges[0][1].chunks(4))
+        .zip(edges[0][2].chunks(4))
+        .zip(edges[1][0].chunks(4))
+        .zip(edges[1][1].chunks(4))
+        .zip(edges[1][2].chunks(4))
     {
+    let vert_ax = _mm_loadu_ps(vert_ax.as_ptr());
+    let vert_ay = _mm_loadu_ps(vert_ay.as_ptr());
+    let vert_az = _mm_loadu_ps(vert_az.as_ptr());
+
+    let vert_bx = _mm_loadu_ps(vert_bx.as_ptr());
+    let vert_by = _mm_loadu_ps(vert_by.as_ptr());
+    let vert_bz = _mm_loadu_ps(vert_bz.as_ptr());
+
+    let vert_cx = _mm_loadu_ps(vert_cx.as_ptr());
+    let vert_cy = _mm_loadu_ps(vert_cy.as_ptr());
+    let vert_cz = _mm_loadu_ps(vert_cz.as_ptr());
+
+    let edge_ax = _mm_loadu_ps(edge_ax.as_ptr());
+    let edge_ay = _mm_loadu_ps(edge_ay.as_ptr());
+    let edge_az = _mm_loadu_ps(edge_az.as_ptr());
+
+    let edge_bx = _mm_loadu_ps(edge_bx.as_ptr());
+    let edge_by = _mm_loadu_ps(edge_by.as_ptr());
+    let edge_bz = _mm_loadu_ps(edge_bz.as_ptr());
+
     
     // let h = ray.direction.cross_product(&edges[1]);
     //
