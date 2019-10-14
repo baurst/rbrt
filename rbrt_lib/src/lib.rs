@@ -81,7 +81,8 @@ pub fn render_scene(
         .into_par_iter()
         .map(|col_idx| {
             let col: Vec<Vec3> = (0..cam.img_height_pix)
-                .into_par_iter()
+                //.into_par_iter()
+                .into_iter()
                 .map(|row_idx| {
                     let bg_color = Vec3 {
                         x: 0.05,

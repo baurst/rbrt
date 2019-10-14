@@ -3,7 +3,10 @@ use std::path::Path;
 
 use crate::aabbox::{compute_min_max_3d, BoundingBox};
 use crate::lambertian::Lambertian;
-use crate::triangle::{get_triangle_normal, triangle_soa_intersect_with_ray, BasicTriangle};
+use crate::triangle::{
+    get_triangle_normal, triangle_soa_intersect_with_ray, triangle_soa_sse_intersect_with_ray,
+    BasicTriangle,
+};
 use crate::vec3::Vec3;
 use crate::{HitInformation, Intersectable, Ray, RayScattering};
 
@@ -160,37 +163,37 @@ impl Intersectable for TriangleMesh {
         let mut closest_ray_param = std::f32::MAX;
         // saving the normal here apparently prevents a cache miss later on
         let mut closes_hit_normal = Vec3::zero();
-        for (triangle_idx, triangle_vertices) in self.vertices.iter().enumerate() {
-            let hit_info_op = triangle_soa_intersect_with_ray(
+        unsafe {
+            let (hit_info_op, hit_idx_op) = triangle_soa_sse_intersect_with_ray(
                 &ray,
-                &triangle_vertices,
-                &self.edges[triangle_idx],
+                &self.vertices,
+                &self.edges,
                 min_dist,
                 max_dist,
             );
-
-            if hit_info_op.is_some() {
+            if hit_info_op.is_some() && hit_idx_op.is_some() {
                 let ray_param_cand = hit_info_op.unwrap();
+                let triangle_idx = hit_idx_op.unwrap();
                 if ray_param_cand < closest_ray_param {
                     closest_ray_param = ray_param_cand;
                     hit_occured = true;
-                    closes_hit_normal = self.normals[triangle_idx];
+                    closes_hit_normal = self.normals[triangle_idx as usize];
                 }
             }
-        }
 
-        if hit_occured {
-            let hit_point = ray.point_at(closest_ray_param);
-            let dist_from_ray_orig = (ray.origin - hit_point).length();
+            if hit_occured {
+                let hit_point = ray.point_at(closest_ray_param);
+                let dist_from_ray_orig = (ray.origin - hit_point).length();
 
-            return Some(HitInformation {
-                hit_point: hit_point,
-                hit_normal: closes_hit_normal,
-                hit_material: &*self.material,
-                dist_from_ray_orig: dist_from_ray_orig,
-            });
-        } else {
-            return None;
+                return Some(HitInformation {
+                    hit_point: hit_point,
+                    hit_normal: closes_hit_normal,
+                    hit_material: &*self.material,
+                    dist_from_ray_orig: dist_from_ray_orig,
+                });
+            } else {
+                return None;
+            }
         }
     }
 }

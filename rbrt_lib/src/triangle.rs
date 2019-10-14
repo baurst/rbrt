@@ -1,5 +1,6 @@
 use crate::vec3::Vec3;
 use crate::{HitInformation, Intersectable, Ray, RayScattering};
+use std::arch::x86_64::*;
 
 pub struct BasicTriangle {
     ///
@@ -68,6 +69,52 @@ pub fn triangle_soa_intersect_with_ray(
     }
 
     return None;
+}
+
+macro_rules! _MM_SHUFFLE {
+    ($z:expr, $y:expr, $x:expr, $w:expr) => {
+        ($z << 6) | ($y << 4) | ($x << 2) | $w
+    };
+}
+
+pub unsafe fn sse_cross_product(a: __m128, b: __m128) -> __m128 {
+    return _mm_sub_ps(
+        _mm_mul_ps(
+            _mm_shuffle_ps(a, a, _MM_SHUFFLE!(3, 0, 2, 1)),
+            _mm_shuffle_ps(b, b, _MM_SHUFFLE!(3, 1, 0, 2)),
+        ),
+        _mm_mul_ps(
+            _mm_shuffle_ps(a, a, _MM_SHUFFLE!(3, 1, 0, 2)),
+            _mm_shuffle_ps(b, b, _MM_SHUFFLE!(3, 0, 2, 1)),
+        ),
+    );
+}
+pub unsafe fn triangle_soa_sse_intersect_with_ray(
+    ray: &Ray,
+    vertices: &Vec<[Vec3; 3]>,
+    edges: &Vec<[Vec3; 2]>,
+    min_dist: f32,
+    max_dist: f32,
+) -> (Option<f32>, Option<u32>) {
+    let eps_sse = _mm_set1_ps(0.0001);
+    let min_dist_sse = _mm_set1_ps(min_dist);
+    let max_dist_sse = _mm_set1_ps(max_dist);
+
+    // load ray origin
+    let ro_x = _mm_set_ps1(ray.origin.x);
+    let ro_y = _mm_set_ps1(ray.origin.y);
+    let ro_z = _mm_set_ps1(ray.origin.z);
+
+    // load ray direction
+    let rd_x = _mm_set_ps1(ray.direction.x);
+    let rd_y = _mm_set_ps1(ray.direction.y);
+    let rd_z = _mm_set_ps1(ray.direction.z);
+
+    for (tri_verts, tri_edges) in vertices
+        .chunks(4)
+        .zip(edges.chunks(4))
+    {}
+    return (None, None);
 }
 
 impl Intersectable for BasicTriangle {
