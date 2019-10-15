@@ -195,10 +195,7 @@ impl Intersectable for TriangleMesh {
             return None;
         }
 
-        let mut hit_occured = false;
-        let mut closest_ray_param = std::f32::MAX;
         // saving the normal here apparently prevents a cache miss later on
-        let mut closes_hit_normal = Vec3::zero();
         unsafe {
             let (hit_info_op, hit_idx_op) = triangle_soa_sse_intersect_with_ray(
                 &ray,
@@ -209,32 +206,26 @@ impl Intersectable for TriangleMesh {
             );
             if hit_info_op.is_some() && hit_idx_op.is_some() {
                 let ray_param_cand = hit_info_op.unwrap();
-                let triangle_idx = hit_idx_op.unwrap();
-                if ray_param_cand < closest_ray_param {
-                    closest_ray_param = ray_param_cand;
-                    hit_occured = true;
-                    closes_hit_normal = Vec3::new(
-                        closes_hit_normal.x,
-                        closes_hit_normal.y,
-                        closes_hit_normal.z,
-                    );
-                }
-            }
-
-            if hit_occured {
-                let hit_point = ray.point_at(closest_ray_param);
+                let hit_idx = hit_idx_op.unwrap(); 
+                let hit_point = ray.point_at(ray_param_cand);
                 let dist_from_ray_orig = (ray.origin - hit_point).length();
+                if dist_from_ray_orig > min_dist && dist_from_ray_orig < max_dist{
 
+                let triangle_idx = hit_idx_op.unwrap();
+
+                let hit_idx = hit_idx_op.unwrap(); 
                 return Some(HitInformation {
                     hit_point: hit_point,
-                    hit_normal: Vec3::new(
-                        closes_hit_normal.x,
-                        closes_hit_normal.y,
-                        closes_hit_normal.z,
-                    ),
+                    hit_normal: Vec3::new(self.normals[hit_idx][0],
+                    self.normals[hit_idx][1],
+                    self.normals[hit_idx][2]),
                     hit_material: &*self.material,
                     dist_from_ray_orig: dist_from_ray_orig,
                 });
+                }
+                else{
+                    return None;
+                }
             } else {
                 return None;
             }
