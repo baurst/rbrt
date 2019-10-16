@@ -1,7 +1,6 @@
 extern crate ord_subset;
 use crate::vec3::Vec3;
 use crate::{HitInformation, Intersectable, Ray, RayScattering};
-use ord_subset::OrdSubsetIterExt;
 use std::arch::x86_64::*;
 use std::mem;
 
@@ -72,12 +71,6 @@ pub fn triangle_soa_intersect_with_ray(
     }
 
     return None;
-}
-
-macro_rules! _MM_SHUFFLE {
-    ($z:expr, $y:expr, $x:expr, $w:expr) => {
-        ($z << 6) | ($y << 4) | ($x << 2) | $w
-    };
 }
 
 pub unsafe fn sse_dot_product(
@@ -188,10 +181,10 @@ pub unsafe fn triangle_soa_sse_intersect_with_ray(
         // let u = f * s.dot(&h);
         let u = _mm_mul_ps(f, sse_dot_product(s_x, s_y, s_z, h_x, h_y, h_z));
 
-        // condition 1: 0.0 < u
+        // condition 1: u < 0.0
         // ||
         // condition 2:  u > 1.0
-        let c2_part1 = _mm_cmplt_ps(zero, u);
+        let c2_part1 = _mm_cmplt_ps(u, zero);
         let c2_part2 = _mm_cmpgt_ps(u, one);
         let c2 = _mm_or_ps(c2_part1, c2_part2);
 
@@ -233,10 +226,10 @@ pub unsafe fn triangle_soa_sse_intersect_with_ray(
         );
         let term_unpacked: (f32, f32, f32, f32) = mem::transmute(res);
 
-        ray_params.push(term_unpacked.3);
-        ray_params.push(term_unpacked.2);
-        ray_params.push(term_unpacked.1);
         ray_params.push(term_unpacked.0);
+        ray_params.push(term_unpacked.1);
+        ray_params.push(term_unpacked.2);
+        ray_params.push(term_unpacked.3);
     }
     let mut num_intersections = 0;
     let mut min_idx = 0;
@@ -249,7 +242,7 @@ pub unsafe fn triangle_soa_sse_intersect_with_ray(
             num_intersections += 1;
         }
     }
-    println!("Found {} intersections!", num_intersections);
+    // println!("Found {} intersections!", num_intersections);
     if min_param > eps_f32 && min_param < 100000.0 {
         return (Some(min_param), Some(min_idx));
     }
