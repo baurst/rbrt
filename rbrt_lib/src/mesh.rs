@@ -18,6 +18,7 @@ pub struct TriangleMesh {
     // 1 normal with 3 coords (x,y,z) each
     pub normals: [Vec<f32>; 3],
 
+    //pub is_padding_triangle: Vec<bool>,
     pub bbox: BoundingBox,
     pub material: Box<dyn RayScattering + Sync>,
 }
@@ -31,6 +32,9 @@ impl TriangleMesh {
         material: Box<dyn RayScattering + Sync>,
     ) -> TriangleMesh {
         let pre_vertices = load_mesh_vertices_from_file(filepath, translation, rotation, scale);
+
+        //   let num_lanes = 4;
+        // let num_triangles =
 
         let mut pre_normals = vec![];
         for triangle_vertices in &pre_vertices {
@@ -206,24 +210,21 @@ impl Intersectable for TriangleMesh {
             );
             if hit_info_op.is_some() && hit_idx_op.is_some() {
                 let ray_param_cand = hit_info_op.unwrap();
-                let hit_idx = hit_idx_op.unwrap(); 
                 let hit_point = ray.point_at(ray_param_cand);
                 let dist_from_ray_orig = (ray.origin - hit_point).length();
-                if dist_from_ray_orig > min_dist && dist_from_ray_orig < max_dist{
-
-                let triangle_idx = hit_idx_op.unwrap();
-
-                let hit_idx = hit_idx_op.unwrap(); 
-                return Some(HitInformation {
-                    hit_point: hit_point,
-                    hit_normal: Vec3::new(self.normals[hit_idx][0],
-                    self.normals[hit_idx][1],
-                    self.normals[hit_idx][2]),
-                    hit_material: &*self.material,
-                    dist_from_ray_orig: dist_from_ray_orig,
-                });
-                }
-                else{
+                if dist_from_ray_orig > min_dist && dist_from_ray_orig < max_dist {
+                    let hit_idx = hit_idx_op.unwrap();
+                    return Some(HitInformation {
+                        hit_point: hit_point,
+                        hit_normal: Vec3::new(
+                            self.normals[0][hit_idx],
+                            self.normals[1][hit_idx],
+                            self.normals[2][hit_idx],
+                        ),
+                        hit_material: &*self.material,
+                        dist_from_ray_orig: dist_from_ray_orig,
+                    });
+                } else {
                     return None;
                 }
             } else {
