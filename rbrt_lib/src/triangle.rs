@@ -36,10 +36,11 @@ pub fn triangle_soa_intersect_with_ray(
     ray: &Ray,
     vertices: &[[Vec<f32>; 3]; 3],
     edges: &[[Vec<f32>; 3]; 2],
+    is_padding_triangle: &Vec<bool>,
     min_dist: f32,
     max_dist: f32,
 ) -> (Option<f32>, Option<usize>) {
-    let eps = 0.0001;
+    let eps = min_dist;
 
     let mut min_idx = 0;
     let mut min_param = 1000000.0;
@@ -72,7 +73,7 @@ pub fn triangle_soa_intersect_with_ray(
         if t > eps
         // ray intersection
         {
-            if t < min_param {
+            if t < min_param && !is_padding_triangle[i] {
                 min_param = t;
                 min_idx = i;
             }
@@ -93,7 +94,7 @@ pub fn basic_triangle_intersect_w_ray(
     min_dist: f32,
     max_dist: f32,
 ) -> Option<f32> {
-    let eps = 0.0000001;
+    let eps = min_dist;
     let h = ray.direction.cross_product(&edges[1]);
     let a = edges[0].dot(&h);
     if -eps < a && a < eps {
@@ -126,6 +127,11 @@ pub fn basic_triangle_intersect_w_ray(
     return None;
 }
 
+/// compute the dot for four vectors at once
+/// i.e.
+/// a_x contains all x components of the 4 a vectors
+/// b_x contains all x components of the 4 b vectors
+/// sum[0] contains the dot product for the first vector, sum[1] for the second etc.
 pub unsafe fn sse_dot_product(
     a_x: __m128,
     a_y: __m128,
@@ -137,10 +143,16 @@ pub unsafe fn sse_dot_product(
     let a_x = _mm_mul_ps(a_x, b_x);
     let a_y = _mm_mul_ps(a_y, b_y);
     let a_z = _mm_mul_ps(a_z, b_z);
-    let a_sum = _mm_add_ps(_mm_add_ps(a_x, a_y), a_z);
-    return a_sum;
+    let sum = _mm_add_ps(_mm_add_ps(a_x, a_y), a_z);
+    return sum;
 }
 
+/// compute the cross product of four vectors at once
+/// i.e.
+/// a_x contains all x components of the 4 a vectors
+/// b_x contains all x components of the 4 b vectors
+/// c_x contains the x components of the cross product
+/// i.e. c_x[0] is the x component of the cross product of a_*[0] and b_*[0]
 pub unsafe fn sse_cross_product(
     a_x: __m128,
     a_y: __m128,
@@ -160,17 +172,16 @@ pub unsafe fn triangle_soa_sse_intersect_with_ray(
     ray: &Ray,
     vertices: &[[Vec<f32>; 3]; 3],
     edges: &[[Vec<f32>; 3]; 2],
+    is_padding_triangle: &Vec<bool>,
     min_dist: f32,
     max_dist: f32,
 ) -> (Option<f32>, Option<usize>) {
     let mut ray_params: Vec<f32> = vec![];
     ray_params.reserve(vertices[0][0].len());
-    let eps_f32 = 0.00001;
+    let eps_f32 = min_dist;
     let eps = _mm_set1_ps(eps_f32);
     let eps_frac = _mm_set1_ps(1.0 / eps_f32);
     let neg_eps = _mm_set1_ps(-eps_f32);
-    let min_dist = _mm_set1_ps(min_dist);
-    let max_dist = _mm_set1_ps(max_dist);
     let zero = _mm_set1_ps(0.0);
     let one = _mm_set1_ps(1.0);
 
@@ -285,17 +296,18 @@ pub unsafe fn triangle_soa_sse_intersect_with_ray(
         ray_params.push(term_unpacked.3);
     }
 
-    return find_smallest_element_bigger_than_eps(ray_params, eps_f32);
+    return find_smallest_element_bigger_than_eps(&ray_params, is_padding_triangle, eps_f32);
 }
 
 pub fn find_smallest_element_bigger_than_eps(
-    ray_params: Vec<f32>,
+    ray_params: &Vec<f32>,
+    is_padding_triangle: &Vec<bool>,
     eps: f32,
 ) -> (Option<f32>, Option<usize>) {
     let mut min_idx = 0;
     let mut min_param = 1000000.0;
     for (idx, ray_param) in ray_params.iter().enumerate() {
-        if *ray_param > eps && *ray_param < min_param {
+        if *ray_param > eps && *ray_param < min_param && !is_padding_triangle[idx] {
             min_param = *ray_param;
             min_idx = idx;
         }
@@ -389,99 +401,117 @@ mod tests {
 
     #[test]
     fn test_sse_cross_product() {
-        unsafe {
-            let a_x = _mm_loadu_ps(vec![1.0, 0.0, 3.0, 2.0].as_ptr());
-            let a_y = _mm_loadu_ps(vec![0.0, 1.0, 4.0, 6.0].as_ptr());
-            let a_z = _mm_loadu_ps(vec![0.0, 0.0, 4.0, 3.0].as_ptr());
+        if is_x86_feature_detected!("sse") {
+            unsafe {
+                let a_x = _mm_loadu_ps(vec![1.0, 0.0, 3.0, 2.0].as_ptr());
+                let a_y = _mm_loadu_ps(vec![0.0, 1.0, 4.0, 6.0].as_ptr());
+                let a_z = _mm_loadu_ps(vec![0.0, 0.0, 4.0, 3.0].as_ptr());
 
-            let b_x = _mm_loadu_ps(vec![0.0, 0.0, 1.0, 2.0].as_ptr());
-            let b_y = _mm_loadu_ps(vec![1.0, 0.0, -2.0, 1.0].as_ptr());
-            let b_z = _mm_loadu_ps(vec![0.0, 1.0, 3.0, -2.0].as_ptr());
+                let b_x = _mm_loadu_ps(vec![0.0, 0.0, 1.0, 2.0].as_ptr());
+                let b_y = _mm_loadu_ps(vec![1.0, 0.0, -2.0, 1.0].as_ptr());
+                let b_z = _mm_loadu_ps(vec![0.0, 1.0, 3.0, -2.0].as_ptr());
 
-            let c_x_exp = _mm_loadu_ps(vec![0.0, 1.0, 20.0, -15.0].as_ptr());
-            let c_y_exp = _mm_loadu_ps(vec![0.0, 0.0, -5.0, 10.0].as_ptr());
-            let c_z_exp = _mm_loadu_ps(vec![1.0, 0.0, -10.0, -10.0].as_ptr());
+                let c_x_exp = _mm_loadu_ps(vec![0.0, 1.0, 20.0, -15.0].as_ptr());
+                let c_y_exp = _mm_loadu_ps(vec![0.0, 0.0, -5.0, 10.0].as_ptr());
+                let c_z_exp = _mm_loadu_ps(vec![1.0, 0.0, -10.0, -10.0].as_ptr());
 
-            let (c_x, c_y, c_z) = sse_cross_product(a_x, a_y, a_z, b_x, b_y, b_z);
+                let (c_x, c_y, c_z) = sse_cross_product(a_x, a_y, a_z, b_x, b_y, b_z);
 
-            assert_m128_equal(c_x, c_x_exp);
-            assert_m128_equal(c_y, c_y_exp);
-            assert_m128_equal(c_z, c_z_exp);
+                assert_m128_equal(c_x, c_x_exp);
+                assert_m128_equal(c_y, c_y_exp);
+                assert_m128_equal(c_z, c_z_exp);
+            }
+        } else {
+            println!("test_sse_cross_product() could not be run, because CPU does not support it!");
         }
     }
 
     #[test]
     fn test_trivial_sse_cross_product() {
-        unsafe {
-            let a_x = _mm_set1_ps(0.0);
-            let a_y = _mm_set1_ps(0.0);
-            let a_z = _mm_set1_ps(1.0);
+        if is_x86_feature_detected!("sse") {
+            unsafe {
+                let a_x = _mm_set1_ps(0.0);
+                let a_y = _mm_set1_ps(0.0);
+                let a_z = _mm_set1_ps(1.0);
 
-            let b_x = _mm_set1_ps(1.0);
-            let b_y = _mm_set1_ps(0.0);
-            let b_z = _mm_set1_ps(0.0);
+                let b_x = _mm_set1_ps(1.0);
+                let b_y = _mm_set1_ps(0.0);
+                let b_z = _mm_set1_ps(0.0);
 
-            let c_x_exp = _mm_set1_ps(0.0);
-            let c_y_exp = _mm_set1_ps(1.0);
-            let c_z_exp = _mm_set1_ps(0.0);
+                let c_x_exp = _mm_set1_ps(0.0);
+                let c_y_exp = _mm_set1_ps(1.0);
+                let c_z_exp = _mm_set1_ps(0.0);
 
-            let (c_x, c_y, c_z) = sse_cross_product(a_x, a_y, a_z, b_x, b_y, b_z);
+                let (c_x, c_y, c_z) = sse_cross_product(a_x, a_y, a_z, b_x, b_y, b_z);
 
-            assert_m128_equal(c_x, c_x_exp);
-            assert_m128_equal(c_y, c_y_exp);
-            assert_m128_equal(c_z, c_z_exp);
+                assert_m128_equal(c_x, c_x_exp);
+                assert_m128_equal(c_y, c_y_exp);
+                assert_m128_equal(c_z, c_z_exp);
+            }
+        } else {
+            println!("test_trivial_sse_cross_product() could not be run, because CPU does not support it!");
         }
     }
 
     #[test]
     fn test_sse_dot_product() {
-        unsafe {
-            let a_x = _mm_loadu_ps(vec![1.0, 0.0, 3.0, 2.0].as_ptr());
-            let a_y = _mm_loadu_ps(vec![0.0, 1.0, 4.0, 6.0].as_ptr());
-            let a_z = _mm_loadu_ps(vec![0.0, 0.0, 4.0, 3.0].as_ptr());
+        if is_x86_feature_detected!("sse") {
+            unsafe {
+                let a_x = _mm_loadu_ps(vec![1.0, 0.0, 3.0, 2.0].as_ptr());
+                let a_y = _mm_loadu_ps(vec![0.0, 1.0, 4.0, 6.0].as_ptr());
+                let a_z = _mm_loadu_ps(vec![0.0, 0.0, 4.0, 3.0].as_ptr());
 
-            let b_x = _mm_loadu_ps(vec![0.0, 0.0, 1.0, 2.0].as_ptr());
-            let b_y = _mm_loadu_ps(vec![1.0, 0.0, -2.0, 1.0].as_ptr());
-            let b_z = _mm_loadu_ps(vec![0.0, 1.0, 3.0, -2.0].as_ptr());
+                let b_x = _mm_loadu_ps(vec![0.0, 0.0, 1.0, 2.0].as_ptr());
+                let b_y = _mm_loadu_ps(vec![1.0, 0.0, -2.0, 1.0].as_ptr());
+                let b_z = _mm_loadu_ps(vec![0.0, 1.0, 3.0, -2.0].as_ptr());
 
-            let s_exp = _mm_loadu_ps(vec![0.0, 0.0, 7.0, 4.0].as_ptr());
+                let s_exp = _mm_loadu_ps(vec![0.0, 0.0, 7.0, 4.0].as_ptr());
 
-            let s = sse_dot_product(a_x, a_y, a_z, b_x, b_y, b_z);
+                let s = sse_dot_product(a_x, a_y, a_z, b_x, b_y, b_z);
 
-            assert_m128_equal(s, s_exp);
+                assert_m128_equal(s, s_exp);
+            }
+        } else {
+            println!("test_sse_dot_product() could not be run, because CPU does not support it!");
         }
     }
 
     #[test]
     fn test_trivial_sse_dot_product() {
-        unsafe {
-            let a_x = _mm_set1_ps(0.0);
-            let a_y = _mm_set1_ps(0.0);
-            let a_z = _mm_set1_ps(1.0);
+        if is_x86_feature_detected!("sse") {
+            unsafe {
+                let a_x = _mm_set1_ps(0.0);
+                let a_y = _mm_set1_ps(0.0);
+                let a_z = _mm_set1_ps(1.0);
 
-            let b_x = _mm_set1_ps(1.0);
-            let b_y = _mm_set1_ps(0.0);
-            let b_z = _mm_set1_ps(0.0);
+                let b_x = _mm_set1_ps(1.0);
+                let b_y = _mm_set1_ps(0.0);
+                let b_z = _mm_set1_ps(0.0);
 
-            let s_exp = _mm_set1_ps(0.0);
+                let s_exp = _mm_set1_ps(0.0);
 
-            let s = sse_dot_product(a_x, a_y, a_z, b_x, b_y, b_z);
+                let s = sse_dot_product(a_x, a_y, a_z, b_x, b_y, b_z);
 
-            assert_m128_equal(s, s_exp);
+                assert_m128_equal(s, s_exp);
 
-            let a_x = _mm_set1_ps(1.0);
-            let a_y = _mm_set1_ps(1.0);
-            let a_z = _mm_set1_ps(1.0);
+                let a_x = _mm_set1_ps(1.0);
+                let a_y = _mm_set1_ps(1.0);
+                let a_z = _mm_set1_ps(1.0);
 
-            let b_x = _mm_set1_ps(1.0);
-            let b_y = _mm_set1_ps(1.0);
-            let b_z = _mm_set1_ps(1.0);
+                let b_x = _mm_set1_ps(1.0);
+                let b_y = _mm_set1_ps(1.0);
+                let b_z = _mm_set1_ps(1.0);
 
-            let s_exp = _mm_set1_ps(3.0);
+                let s_exp = _mm_set1_ps(3.0);
 
-            let s = sse_dot_product(a_x, a_y, a_z, b_x, b_y, b_z);
+                let s = sse_dot_product(a_x, a_y, a_z, b_x, b_y, b_z);
 
-            assert_m128_equal(s, s_exp);
+                assert_m128_equal(s, s_exp);
+            }
+        } else {
+            println!(
+                "test_trivial_sse_dot_product() could not be run, because CPU does not support it!"
+            );
         }
     }
 }

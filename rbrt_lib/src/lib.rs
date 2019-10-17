@@ -109,7 +109,7 @@ pub fn render_scene(
             col
         })
         .collect();
-    print!("\rRendering 100% complete!");
+    println!("\rRendering 100% complete!");
 
     let mut imgbuf = image::ImageBuffer::new(cam.img_width_pix, cam.img_height_pix);
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {

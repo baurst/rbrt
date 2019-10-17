@@ -11,16 +11,31 @@ use crate::vec3::Vec3;
 use crate::{HitInformation, Intersectable, Ray, RayScattering};
 
 pub struct TriangleMesh {
-    // 3 vertices with 3 coords (x,y,z) each
+    /// 3 vertices with 3 coords (x,y,z) each
     pub vertices: [[Vec<f32>; 3]; 3],
-    // 2 edges with 3 coords (x,y,z) each
+    /// 2 edges with 3 coords (x,y,z) each
     pub edges: [[Vec<f32>; 3]; 2],
-    // 1 normal with 3 coords (x,y,z) each
+    /// 1 normal with 3 coords (x,y,z) each
     pub normals: [Vec<f32>; 3],
-
-    //pub is_padding_triangle: Vec<bool>,
+    /// 1 flag to set padding elements
+    pub is_padding_triangle: Vec<bool>,
+    /// axis aligned bounding box of the Mesh
     pub bbox: BoundingBox,
+    /// one material for the whole mesh
     pub material: Box<dyn RayScattering + Sync>,
+}
+
+pub fn determine_num_vector_lanes() -> usize {
+    if is_x86_feature_detected!("avx") {
+        println!("AVX capability detected!");
+        return 8;
+    } else if is_x86_feature_detected!("sse") {
+        println!("SSE capability detected!");
+        return 4;
+    } else {
+        println!("Neither SSE nor AVX capability detected - using slower scalar fallback!");
+        return 0;
+    }
 }
 
 impl TriangleMesh {
@@ -31,10 +46,7 @@ impl TriangleMesh {
         scale: f32,
         material: Box<dyn RayScattering + Sync>,
     ) -> TriangleMesh {
-        let pre_vertices = load_mesh_vertices_from_file(filepath, translation, rotation, scale);
-
-        //   let num_lanes = 4;
-        // let num_triangles =
+        let mut pre_vertices = load_mesh_vertices_from_file(filepath, translation, rotation, scale);
 
         let mut pre_normals = vec![];
         for triangle_vertices in &pre_vertices {
@@ -47,6 +59,19 @@ impl TriangleMesh {
                 triangle_vertices[1] - triangle_vertices[0],
                 triangle_vertices[2] - triangle_vertices[0],
             ]);
+        }
+
+        // use padding for simd
+        let num_vec_lanes = determine_num_vector_lanes();
+        let num_triangles = pre_vertices.len();
+        let num_padding_vals_required = num_triangles % num_vec_lanes;
+
+        let mut is_padding_triangle = vec![false; num_triangles];
+        for _i in 0..num_padding_vals_required {
+            pre_normals.push(pre_normals[0]);
+            pre_edges.push(pre_edges[0]);
+            pre_vertices.push(pre_vertices[0]);
+            is_padding_triangle.push(true);
         }
 
         let (lower_bound, upper_bound) = compute_min_max_3d(&pre_vertices);
@@ -85,6 +110,7 @@ impl TriangleMesh {
         }
 
         return TriangleMesh {
+            is_padding_triangle: is_padding_triangle,
             vertices: vertices,
             normals: normals,
             edges: edges,
@@ -191,13 +217,30 @@ pub fn do_intersection_soa(
     ray: &Ray,
     vertices: &[[std::vec::Vec<f32>; 3]; 3],
     edges: &[[std::vec::Vec<f32>; 3]; 2],
+    is_padding_triangle: &Vec<bool>,
     min_dist: f32,
     max_dist: f32,
 ) -> (Option<f32>, Option<usize>) {
     if is_x86_feature_detected!("sse") {
-        unsafe { triangle_soa_sse_intersect_with_ray(&ray, vertices, edges, min_dist, max_dist) }
+        unsafe {
+            triangle_soa_sse_intersect_with_ray(
+                &ray,
+                vertices,
+                edges,
+                is_padding_triangle,
+                min_dist,
+                max_dist,
+            )
+        }
     } else {
-        triangle_soa_intersect_with_ray(&ray, vertices, edges, min_dist, max_dist)
+        triangle_soa_intersect_with_ray(
+            &ray,
+            vertices,
+            edges,
+            is_padding_triangle,
+            min_dist,
+            max_dist,
+        )
     }
 }
 
@@ -212,8 +255,14 @@ impl Intersectable for TriangleMesh {
         if !self.bbox.hit(ray) {
             return None;
         }
-        let (hit_info_op, hit_idx_op) =
-            do_intersection_soa(&ray, &self.vertices, &self.edges, min_dist, max_dist);
+        let (hit_info_op, hit_idx_op) = do_intersection_soa(
+            &ray,
+            &self.vertices,
+            &self.edges,
+            &self.is_padding_triangle,
+            min_dist,
+            max_dist,
+        );
 
         if hit_info_op.is_some() && hit_idx_op.is_some() {
             let ray_param_cand = hit_info_op.unwrap();
