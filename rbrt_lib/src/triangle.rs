@@ -34,6 +34,60 @@ pub fn get_triangle_normal(corners: &[Vec3; 3]) -> Vec3 {
 
 pub fn triangle_soa_intersect_with_ray(
     ray: &Ray,
+    vertices: &[[Vec<f32>; 3]; 3],
+    edges: &[[Vec<f32>; 3]; 2],
+    min_dist: f32,
+    max_dist: f32,
+) -> (Option<f32>, Option<usize>) {
+    let eps = 0.0001;
+
+    let mut min_idx = 0;
+    let mut min_param = 1000000.0;
+
+    for i in 0..vertices[0][0].len() {
+        let vertex_a = Vec3::new(vertices[0][0][i], vertices[0][1][i], vertices[0][2][i]);
+
+        let edge_a = Vec3::new(edges[0][0][i], edges[0][1][i], edges[0][1][i]);
+        let edge_b = Vec3::new(edges[1][0][i], edges[1][1][i], edges[1][1][i]);
+
+        let h = ray.direction.cross_product(&edge_b);
+        let a = edge_a.dot(&h);
+
+        if -eps < a && a < eps {
+            continue;
+        }
+        let f = 1.0 / a;
+        let s = ray.origin - vertex_a;
+        let u = f * s.dot(&h);
+        if u < 0.0 || u > 1.0 {
+            continue;
+        }
+        let q = s.cross_product(&edge_a);
+        let v = f * ray.direction.dot(&q);
+        if v < 0.0 || u + v > 1.0 {
+            continue;
+        }
+        // At this stage we can compute t to find out where the intersection point is on the line.
+        let t = f * edge_b.dot(&q);
+        if t > eps
+        // ray intersection
+        {
+            if t < min_param {
+                min_param = t;
+                min_idx = i;
+            }
+        }
+    }
+
+    if min_param > eps && min_param < max_dist {
+        return (Some(min_param), Some(min_idx));
+    } else {
+        return (None, None);
+    }
+}
+
+pub fn basic_triangle_intersect_w_ray(
+    ray: &Ray,
     vertices: &[Vec3; 3],
     edges: &[Vec3; 2],
     min_dist: f32,
@@ -69,7 +123,6 @@ pub fn triangle_soa_intersect_with_ray(
             return Some(t);
         }
     }
-
     return None;
 }
 
@@ -231,23 +284,27 @@ pub unsafe fn triangle_soa_sse_intersect_with_ray(
         ray_params.push(term_unpacked.2);
         ray_params.push(term_unpacked.3);
     }
-    let mut num_intersections = 0;
+
+    return find_smallest_element_bigger_than_eps(ray_params, eps_f32);
+}
+
+pub fn find_smallest_element_bigger_than_eps(
+    ray_params: Vec<f32>,
+    eps: f32,
+) -> (Option<f32>, Option<usize>) {
     let mut min_idx = 0;
     let mut min_param = 1000000.0;
-    // look for the minimum param that is larger than 0.0
     for (idx, ray_param) in ray_params.iter().enumerate() {
-        if *ray_param > eps_f32 && *ray_param < min_param {
+        if *ray_param > eps && *ray_param < min_param {
             min_param = *ray_param;
             min_idx = idx;
-            num_intersections += 1;
         }
     }
-    // println!("Found {} intersections!", num_intersections);
-    if min_param > eps_f32 && min_param < 100000.0 {
+    if min_param > eps && min_param < 100000.0 {
         return (Some(min_param), Some(min_idx));
+    } else {
+        return (None, None);
     }
-
-    return (None, None);
 }
 
 impl Intersectable for BasicTriangle {
@@ -259,7 +316,7 @@ impl Intersectable for BasicTriangle {
         max_dist: f32,
     ) -> Option<HitInformation> {
         let ray_param_op =
-            triangle_soa_intersect_with_ray(&ray, &self.corners, &self.edges, min_dist, max_dist);
+            basic_triangle_intersect_w_ray(&ray, &self.corners, &self.edges, min_dist, max_dist);
 
         if ray_param_op.is_some()
         // ray intersection

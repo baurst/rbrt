@@ -198,8 +198,6 @@ impl Intersectable for TriangleMesh {
         if !self.bbox.hit(ray) {
             return None;
         }
-
-        // saving the normal here apparently prevents a cache miss later on
         unsafe {
             let (hit_info_op, hit_idx_op) = triangle_soa_sse_intersect_with_ray(
                 &ray,
