@@ -187,6 +187,20 @@ pub fn load_mesh_from_file(
     return model_elements;
 }
 
+pub fn do_intersection_soa(
+    ray: &Ray,
+    vertices: &[[std::vec::Vec<f32>; 3]; 3],
+    edges: &[[std::vec::Vec<f32>; 3]; 2],
+    min_dist: f32,
+    max_dist: f32,
+) -> (Option<f32>, Option<usize>) {
+    if is_x86_feature_detected!("sse") {
+        unsafe { triangle_soa_sse_intersect_with_ray(&ray, vertices, edges, min_dist, max_dist) }
+    } else {
+        triangle_soa_intersect_with_ray(&ray, vertices, edges, min_dist, max_dist)
+    }
+}
+
 impl Intersectable for TriangleMesh {
     fn intersect_with_ray<'a>(
         &'a self,
@@ -198,36 +212,30 @@ impl Intersectable for TriangleMesh {
         if !self.bbox.hit(ray) {
             return None;
         }
-        unsafe {
-            let (hit_info_op, hit_idx_op) = triangle_soa_sse_intersect_with_ray(
-                &ray,
-                &self.vertices,
-                &self.edges,
-                min_dist,
-                max_dist,
-            );
-            if hit_info_op.is_some() && hit_idx_op.is_some() {
-                let ray_param_cand = hit_info_op.unwrap();
-                let hit_point = ray.point_at(ray_param_cand);
-                let dist_from_ray_orig = (ray.origin - hit_point).length();
-                if dist_from_ray_orig > min_dist && dist_from_ray_orig < max_dist {
-                    let hit_idx = hit_idx_op.unwrap();
-                    return Some(HitInformation {
-                        hit_point: hit_point,
-                        hit_normal: Vec3::new(
-                            self.normals[0][hit_idx],
-                            self.normals[1][hit_idx],
-                            self.normals[2][hit_idx],
-                        ),
-                        hit_material: &*self.material,
-                        dist_from_ray_orig: dist_from_ray_orig,
-                    });
-                } else {
-                    return None;
-                }
+        let (hit_info_op, hit_idx_op) =
+            do_intersection_soa(&ray, &self.vertices, &self.edges, min_dist, max_dist);
+
+        if hit_info_op.is_some() && hit_idx_op.is_some() {
+            let ray_param_cand = hit_info_op.unwrap();
+            let hit_point = ray.point_at(ray_param_cand);
+            let dist_from_ray_orig = (ray.origin - hit_point).length();
+            if dist_from_ray_orig > min_dist && dist_from_ray_orig < max_dist {
+                let hit_idx = hit_idx_op.unwrap();
+                return Some(HitInformation {
+                    hit_point: hit_point,
+                    hit_normal: Vec3::new(
+                        self.normals[0][hit_idx],
+                        self.normals[1][hit_idx],
+                        self.normals[2][hit_idx],
+                    ),
+                    hit_material: &*self.material,
+                    dist_from_ray_orig: dist_from_ray_orig,
+                });
             } else {
                 return None;
             }
+        } else {
+            return None;
         }
     }
 }
