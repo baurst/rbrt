@@ -4,8 +4,8 @@ use std::path::Path;
 use crate::aabbox::{compute_min_max_3d, BoundingBox};
 use crate::lambertian::Lambertian;
 use crate::triangle::{
-    get_triangle_normal, triangle_soa_intersect_with_ray, triangle_soa_sse_intersect_with_ray,
-    BasicTriangle,
+    get_triangle_normal, triangle_soa_avx_intersect_with_ray, triangle_soa_intersect_with_ray,
+    triangle_soa_sse_intersect_with_ray, BasicTriangle,
 };
 use crate::vec3::Vec3;
 use crate::{HitInformation, Intersectable, Ray, RayScattering};
@@ -221,7 +221,18 @@ pub fn do_intersection_soa(
     min_dist: f32,
     max_dist: f32,
 ) -> (Option<f32>, Option<usize>) {
-    if is_x86_feature_detected!("sse") {
+    if is_x86_feature_detected!("avx") {
+        unsafe {
+            triangle_soa_avx_intersect_with_ray(
+                &ray,
+                vertices,
+                edges,
+                is_padding_triangle,
+                min_dist,
+                max_dist,
+            )
+        }
+    } else if is_x86_feature_detected!("sse") {
         unsafe {
             triangle_soa_sse_intersect_with_ray(
                 &ray,
