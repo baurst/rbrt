@@ -268,8 +268,8 @@ pub unsafe fn triangle_soa_avx_intersect_with_ray(
         // condition 1: -eps < a
         // &&
         // condition 2:  a < eps
-        let c1_part1 = _mm256_cmp_ps(neg_eps, a_sum, _CMP_LT_OS);
-        let c1_part2 = _mm256_cmp_ps(a_sum, eps, _CMP_LT_OS);
+        let c1_part1 = _mm256_cmp_ps(neg_eps, a_sum, _CMP_LT_OQ);
+        let c1_part2 = _mm256_cmp_ps(a_sum, eps, _CMP_LT_OQ);
         let c1 = _mm256_and_ps(c1_part1, c1_part2);
 
         // f = 1.0/a
@@ -286,8 +286,8 @@ pub unsafe fn triangle_soa_avx_intersect_with_ray(
         // condition 1: u < 0.0
         // ||
         // condition 2:  u > 1.0
-        let c2_part1 = _mm256_cmp_ps(u, zero, _CMP_LT_OS);
-        let c2_part2 = _mm256_cmp_ps(u, one, _CMP_GT_OS);
+        let c2_part1 = _mm256_cmp_ps(u, zero, _CMP_LT_OQ);
+        let c2_part2 = _mm256_cmp_ps(u, one, _CMP_GT_OQ);
         let c2 = _mm256_or_ps(c2_part1, c2_part2);
 
         // let q = s.cross_product(&edges[0]);
@@ -299,8 +299,8 @@ pub unsafe fn triangle_soa_avx_intersect_with_ray(
         // condition 1: v < 0.0
         // ||
         // condition 2:  u + v > 1.0
-        let c3_part1 = _mm256_cmp_ps(v, zero, _CMP_LT_OS);
-        let c3_part2 = _mm256_cmp_ps(_mm256_add_ps(u, v), one, _CMP_GT_OS);
+        let c3_part1 = _mm256_cmp_ps(v, zero, _CMP_LT_OQ);
+        let c3_part2 = _mm256_cmp_ps(_mm256_add_ps(u, v), one, _CMP_GT_OQ);
         let c3 = _mm256_or_ps(c3_part1, c3_part2);
 
         // let t = f * edges[1].dot(&q);
@@ -309,8 +309,8 @@ pub unsafe fn triangle_soa_avx_intersect_with_ray(
         // condition1: t > eps
         // &&
         // condition2: t < 1/eps
-        let c4_part1 = _mm256_cmp_ps(t, eps, _CMP_GT_OS);
-        let c4_part2 = _mm256_cmp_ps(t, eps_frac, _CMP_LT_OS);
+        let c4_part1 = _mm256_cmp_ps(t, eps, _CMP_GT_OQ);
+        let c4_part2 = _mm256_cmp_ps(t, eps_frac, _CMP_LT_OQ);
         let c4 = _mm256_and_ps(c4_part1, c4_part2);
 
         let c23 = _mm256_or_ps(c2, c3);
