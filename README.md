@@ -8,14 +8,17 @@ The inspiration for this project came from the excellent book ['Raytracing In On
 ![Demo](demo_imgs/header.png)
 
 ## Core Features
-* meshes are supported via .obj file
+* speed - both SSE and AVX support
+* meshes can be loaded via .obj file
 * scenes are configured easily via yaml (see scenes/example_scene.yml)
 
 ## Try it out!
 ```bash
 git clone https://github.com/baurst/rbrt.git
 cd rbrt
-cargo build --release
+
+# build with avx and sse enabled
+RUSTFLAGS='-C target-feature=+sse,+avx' cargo build --release
 
 # download the stanford bunny
 wget http://graphics.stanford.edu/~mdfisher/Data/Meshes/bunny.obj
@@ -23,6 +26,8 @@ wget http://graphics.stanford.edu/~mdfisher/Data/Meshes/bunny.obj
 # run the raytracer: adjust samples according to your needs
 ./target/release/rbrt --target_file out.png --height 768 --width 1024 --samples 50 --config scenes/example_scene.yaml
 ```
+If you do not set RUSTFLAGS='-C target-feature=+sse,+avx', a scalar fallback will be used and the raytracer will run very slow.
+
 
 ## Coordinate System
 The raytracer uses a right-handed coordinate system, with negative z pointing through the camera lens towards the scene.
