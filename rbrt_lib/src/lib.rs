@@ -15,6 +15,8 @@ pub mod scene;
 pub mod sphere;
 pub mod triangle;
 pub mod vec3;
+pub mod vec3_avx;
+pub mod vec3_sse;
 
 use cam::Camera;
 use image::Rgb;
