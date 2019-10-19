@@ -40,3 +40,76 @@ pub unsafe fn avx_cross_product(
 
     return (c_x, c_y, c_z);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{avx_cross_product, avx_dot_product};
+    use std::arch::x86_64::*;
+    use std::mem;
+
+    unsafe fn assert_m256_equal(a: __m256, b: __m256) {
+        let a: (f32, f32, f32, f32, f32, f32, f32, f32) = mem::transmute(a);
+        let b: (f32, f32, f32, f32, f32, f32, f32, f32) = mem::transmute(b);
+        assert_eq!(a.0, b.0);
+        assert_eq!(a.1, b.1);
+        assert_eq!(a.2, b.2);
+        assert_eq!(a.3, b.3);
+        assert_eq!(a.4, b.4);
+        assert_eq!(a.5, b.5);
+        assert_eq!(a.6, b.6);
+        assert_eq!(a.7, b.7);
+    }
+
+    #[test]
+    fn test_avx_cross_product() {
+        if is_x86_feature_detected!("avx") {
+            unsafe {
+                let a_x = _mm256_loadu_ps(vec![1.0, 0.0, 3.0, 2.0, 1.0, 0.0, 3.0, 2.0].as_ptr());
+                let a_y = _mm256_loadu_ps(vec![0.0, 1.0, 4.0, 6.0, 0.0, 1.0, 4.0, 6.0].as_ptr());
+                let a_z = _mm256_loadu_ps(vec![0.0, 0.0, 4.0, 3.0, 0.0, 0.0, 4.0, 3.0].as_ptr());
+
+                let b_x = _mm256_loadu_ps(vec![0.0, 0.0, 1.0, 2.0, 0.0, 0.0, 1.0, 2.0].as_ptr());
+                let b_y = _mm256_loadu_ps(vec![1.0, 0.0, -2.0, 1.0, 1.0, 0.0, -2.0, 1.0].as_ptr());
+                let b_z = _mm256_loadu_ps(vec![0.0, 1.0, 3.0, -2.0, 0.0, 1.0, 3.0, -2.].as_ptr());
+
+                let c_x_exp =
+                    _mm256_loadu_ps(vec![0.0, 1.0, 20.0, -15.0, 0.0, 1.0, 20.0, -15.0].as_ptr());
+                let c_y_exp =
+                    _mm256_loadu_ps(vec![0.0, 0.0, -5.0, 10.0, 0.0, 0.0, -5.0, 10.0].as_ptr());
+                let c_z_exp =
+                    _mm256_loadu_ps(vec![1.0, 0.0, -10.0, -10.0, 1.0, 0.0, -10.0, -10.0].as_ptr());
+
+                let (c_x, c_y, c_z) = avx_cross_product(a_x, a_y, a_z, b_x, b_y, b_z);
+
+                assert_m256_equal(c_x, c_x_exp);
+                assert_m256_equal(c_y, c_y_exp);
+                assert_m256_equal(c_z, c_z_exp);
+            }
+        } else {
+            println!("test_avx_cross_product() could not be run, because CPU does not support it!");
+        }
+    }
+
+    #[test]
+    fn test_avx_dot_product() {
+        if is_x86_feature_detected!("avx") {
+            unsafe {
+                let a_x = _mm256_loadu_ps(vec![1.0, 0.0, 3.0, 2.0, 1.0, 0.0, 3.0, 2.0].as_ptr());
+                let a_y = _mm256_loadu_ps(vec![0.0, 1.0, 4.0, 6.0, 0.0, 1.0, 4.0, 6.0].as_ptr());
+                let a_z = _mm256_loadu_ps(vec![0.0, 0.0, 4.0, 3.0, 0.0, 0.0, 4.0, 3.0].as_ptr());
+
+                let b_x = _mm256_loadu_ps(vec![0.0, 0.0, 1.0, 2.0, 0.0, 0.0, 1.0, 2.0].as_ptr());
+                let b_y = _mm256_loadu_ps(vec![1.0, 0.0, -2.0, 1.0, 1.0, 0.0, -2.0, 1.0].as_ptr());
+                let b_z = _mm256_loadu_ps(vec![0.0, 1.0, 3.0, -2.0, 0.0, 1.0, 3.0, -2.0].as_ptr());
+
+                let s_exp = _mm256_loadu_ps(vec![0.0, 0.0, 7.0, 4.0, 0.0, 0.0, 7.0, 4.0].as_ptr());
+
+                let s = avx_dot_product(a_x, a_y, a_z, b_x, b_y, b_z);
+
+                assert_m256_equal(s, s_exp);
+            }
+        } else {
+            println!("test_sse_dot_product() could not be run, because CPU does not support it!");
+        }
+    }
+}
