@@ -252,16 +252,9 @@ pub unsafe fn triangle_soa_avx_intersect_with_ray(
             _mm256_and_ps(has_intersect, t),
             _mm256_andnot_ps(has_intersect, minus_a_lot),
         );
-        let term_unpacked: (f32, f32, f32, f32, f32, f32, f32, f32) = mem::transmute(res);
 
-        ray_params.push(term_unpacked.0);
-        ray_params.push(term_unpacked.1);
-        ray_params.push(term_unpacked.2);
-        ray_params.push(term_unpacked.3);
-        ray_params.push(term_unpacked.4);
-        ray_params.push(term_unpacked.5);
-        ray_params.push(term_unpacked.6);
-        ray_params.push(term_unpacked.7);
+        let t_unpacked: [f32; 8] = mem::transmute(res);
+        ray_params.extend_from_slice(&t_unpacked);
     }
 
     return find_smallest_element_bigger_than_eps(&ray_params, is_padding_triangle, eps_f32);
@@ -387,12 +380,9 @@ pub unsafe fn triangle_soa_sse_intersect_with_ray(
             _mm_and_ps(has_intersect, t),
             _mm_andnot_ps(has_intersect, minus_a_lot),
         );
-        let term_unpacked: (f32, f32, f32, f32) = mem::transmute(res);
 
-        ray_params.push(term_unpacked.0);
-        ray_params.push(term_unpacked.1);
-        ray_params.push(term_unpacked.2);
-        ray_params.push(term_unpacked.3);
+        let t_unpacked: [f32; 4] = mem::transmute(res);
+        ray_params.extend_from_slice(&t_unpacked);
     }
 
     return find_smallest_element_bigger_than_eps(&ray_params, is_padding_triangle, eps_f32);

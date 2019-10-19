@@ -48,16 +48,9 @@ mod tests {
     use std::mem;
 
     unsafe fn assert_m256_equal(a: __m256, b: __m256) {
-        let a: (f32, f32, f32, f32, f32, f32, f32, f32) = mem::transmute(a);
-        let b: (f32, f32, f32, f32, f32, f32, f32, f32) = mem::transmute(b);
-        assert_eq!(a.0, b.0);
-        assert_eq!(a.1, b.1);
-        assert_eq!(a.2, b.2);
-        assert_eq!(a.3, b.3);
-        assert_eq!(a.4, b.4);
-        assert_eq!(a.5, b.5);
-        assert_eq!(a.6, b.6);
-        assert_eq!(a.7, b.7);
+        let a: [f32; 8] = mem::transmute(a);
+        let b: [f32; 8] = mem::transmute(b);
+        assert_eq!(a, b);
     }
 
     #[test]
