@@ -5,7 +5,7 @@ use crate::{HitInformation, Ray, RayScattering};
 #[derive(Copy, Clone, Debug)]
 pub struct Metal {
     pub albedo: Vec3,
-    pub roughness: f64,
+    pub roughness: f32,
 }
 
 impl RayScattering for Metal {

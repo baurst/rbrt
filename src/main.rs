@@ -85,6 +85,8 @@ fn main() {
 
     let img_buf = rbrt_lib::render_scene(cam, num_samples, scene);
 
+    println!("Saving rendered image to {}", target_image_path);
+
     img_buf.save(target_image_path).expect(&format!(
         "Unable to save target img to {}! Maybe the directory does not exist?",
         target_image_path

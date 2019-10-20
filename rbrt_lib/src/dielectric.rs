@@ -4,7 +4,7 @@ use crate::{HitInformation, Ray, RayScattering};
 
 #[derive(Copy, Clone, Debug)]
 pub struct Dielectric {
-    pub ref_idx: f64,
+    pub ref_idx: f32,
 }
 
 impl RayScattering for Dielectric {
@@ -46,7 +46,7 @@ impl RayScattering for Dielectric {
         } else {
             reflect_prob = 1.0;
         }
-        if rand::random::<f64>() < reflect_prob {
+        if rand::random::<f32>() < reflect_prob {
             *scattered_ray = Ray {
                 origin: hit_info.hit_point,
                 direction: reflected_ray_dir,
@@ -61,7 +61,7 @@ impl RayScattering for Dielectric {
     }
 }
 
-pub fn schlick(cosine: f64, ref_index: f64) -> f64 {
+pub fn schlick(cosine: f32, ref_index: f32) -> f32 {
     let r0 = ((1.0 - ref_index) / (1.0 + ref_index)).powi(2);
     return r0 + (1.0 - r0) * (1.0 - cosine).powi(5);
 }
@@ -69,7 +69,7 @@ pub fn schlick(cosine: f64, ref_index: f64) -> f64 {
 pub fn refract(
     incoming_ray_dir: &Vec3,
     normal: &Vec3,
-    ni_over_nt: f64,
+    ni_over_nt: f32,
     refracted_ray_dir: &mut Vec3,
 ) -> bool {
     let view_unit = incoming_ray_dir.normalize();
@@ -108,8 +108,8 @@ mod test {
         assert_eq!(
             refr_ray_dir,
             Vec3 {
-                x: 0.14142135623731075,
-                y: 0.9899494936611666,
+                x: 0.14142191,
+                y: 0.9899495,
                 z: 0.0
             }
         );
