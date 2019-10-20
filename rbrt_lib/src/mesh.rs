@@ -60,54 +60,9 @@ impl TriangleMesh {
                 triangle_vertices[2] - triangle_vertices[0],
             ]);
         }
-
-        // use padding for simd
-        let num_vec_lanes = determine_num_vector_lanes();
-        let num_triangles = pre_vertices.len();
-        let num_padding_vals_required = num_triangles % num_vec_lanes;
-
-        let mut is_padding_triangle = vec![false; num_triangles];
-        for _i in 0..num_padding_vals_required {
-            pre_normals.push(pre_normals[0]);
-            pre_edges.push(pre_edges[0]);
-            pre_vertices.push(pre_vertices[0]);
-            is_padding_triangle.push(true);
-        }
-
         let (lower_bound, upper_bound) = compute_min_max_3d(&pre_vertices);
-        let mut vertices: [[Vec<f32>; 3]; 3] = [
-            [vec![], vec![], vec![]],
-            [vec![], vec![], vec![]],
-            [vec![], vec![], vec![]],
-        ];
-
-        for vertex in pre_vertices {
-            vertices[0][0].push(vertex[0].x);
-            vertices[0][1].push(vertex[0].y);
-            vertices[0][2].push(vertex[0].z);
-            vertices[1][0].push(vertex[1].x);
-            vertices[1][1].push(vertex[1].y);
-            vertices[1][2].push(vertex[1].z);
-            vertices[2][0].push(vertex[2].x);
-            vertices[2][1].push(vertex[2].y);
-            vertices[2][2].push(vertex[2].z);
-        }
-        let mut edges: [[Vec<f32>; 3]; 2] = [[vec![], vec![], vec![]], [vec![], vec![], vec![]]];
-        for edge in pre_edges {
-            edges[0][0].push(edge[0].x);
-            edges[0][1].push(edge[0].y);
-            edges[0][2].push(edge[0].z);
-            edges[1][0].push(edge[1].x);
-            edges[1][1].push(edge[1].y);
-            edges[1][2].push(edge[1].z);
-        }
-
-        let mut normals: [Vec<f32>; 3] = [vec![], vec![], vec![]];
-        for normal in pre_normals {
-            normals[0].push(normal.x);
-            normals[1].push(normal.y);
-            normals[2].push(normal.z);
-        }
+        let (vertices, edges, normals, is_padding_triangle) =
+            convert_to_soa_mesh(&mut pre_vertices, &mut pre_edges, &mut pre_normals);
 
         return TriangleMesh {
             is_padding_triangle: is_padding_triangle,
@@ -211,6 +166,66 @@ pub fn load_mesh_from_file(
         filepath
     );
     return model_elements;
+}
+
+pub fn convert_to_soa_mesh(
+    pre_vertices: &mut std::vec::Vec<[Vec3; 3]>,
+    pre_edges: &mut std::vec::Vec<[Vec3; 2]>,
+    pre_normals: &mut std::vec::Vec<Vec3>,
+) -> (
+    [[Vec<f32>; 3]; 3],
+    [[Vec<f32>; 3]; 2],
+    [Vec<f32>; 3],
+    std::vec::Vec<bool>,
+) {
+    // use padding for simd
+    let num_vec_lanes = determine_num_vector_lanes();
+    let num_triangles = pre_vertices.len();
+    let num_padding_vals_required = num_triangles % num_vec_lanes;
+
+    let mut is_padding_triangle = vec![false; num_triangles];
+    for _i in 0..num_padding_vals_required {
+        pre_normals.push(pre_normals[0]);
+        pre_edges.push(pre_edges[0]);
+        pre_vertices.push(pre_vertices[0]);
+        is_padding_triangle.push(true);
+    }
+
+    let mut vertices: [[Vec<f32>; 3]; 3] = [
+        [vec![], vec![], vec![]],
+        [vec![], vec![], vec![]],
+        [vec![], vec![], vec![]],
+    ];
+
+    for vertex in pre_vertices {
+        vertices[0][0].push(vertex[0].x);
+        vertices[0][1].push(vertex[0].y);
+        vertices[0][2].push(vertex[0].z);
+        vertices[1][0].push(vertex[1].x);
+        vertices[1][1].push(vertex[1].y);
+        vertices[1][2].push(vertex[1].z);
+        vertices[2][0].push(vertex[2].x);
+        vertices[2][1].push(vertex[2].y);
+        vertices[2][2].push(vertex[2].z);
+    }
+    let mut edges: [[Vec<f32>; 3]; 2] = [[vec![], vec![], vec![]], [vec![], vec![], vec![]]];
+    for edge in pre_edges {
+        edges[0][0].push(edge[0].x);
+        edges[0][1].push(edge[0].y);
+        edges[0][2].push(edge[0].z);
+        edges[1][0].push(edge[1].x);
+        edges[1][1].push(edge[1].y);
+        edges[1][2].push(edge[1].z);
+    }
+
+    let mut normals: [Vec<f32>; 3] = [vec![], vec![], vec![]];
+    for normal in pre_normals {
+        normals[0].push(normal.x);
+        normals[1].push(normal.y);
+        normals[2].push(normal.z);
+    }
+
+    return (vertices, edges, normals, is_padding_triangle);
 }
 
 pub fn do_intersection_soa(
