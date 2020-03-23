@@ -98,7 +98,7 @@ impl PartialEq for Vec3 {
 impl Vec3 {
     #[inline]
     pub fn new(x: f32, y: f32, z: f32) -> Vec3 {
-        Vec3 { x: x, y: y, z: z }
+        Vec3 { x, y, z }
     }
     #[inline]
     pub fn zero() -> Vec3 {
@@ -110,21 +110,20 @@ impl Vec3 {
     }
     #[inline]
     pub fn length(&self) -> f32 {
-        return (self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
+        (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
     #[inline]
     pub fn sum(&self) -> f32 {
-        return self.x + self.y + self.z;
+        self.x + self.y + self.z
     }
     #[inline]
     pub fn normalize(&self) -> Vec3 {
         let len = self.length();
-        let vec = Vec3 {
+        Vec3 {
             x: self.x / len,
             y: self.y / len,
             z: self.z / len,
-        };
-        return vec;
+        }
     }
     #[inline]
     pub fn cross_product(&self, other: &Vec3) -> Vec3 {
@@ -149,16 +148,15 @@ impl Vec3 {
 
         let (x, y, z) = (self.x, self.y, self.z);
 
-        let res = Vec3::new(
+        Vec3::new(
             (c_x * c_z - c_y * s_x * s_z) * x - (c_x * s_z + c_y * c_z * s_x) * y + s_x * s_y * z,
             (c_z * s_x + c_x * c_y * s_z) * x + (c_x * c_y * c_z - s_x * s_z) * y - c_x * s_y * z,
             s_y * s_z * x + c_z * s_y * y + c_y * z,
-        );
-        return res;
+        )
     }
     #[inline]
     pub fn dot(&self, other: &Vec3) -> f32 {
-        return (*self * *other).sum();
+        (*self * *other).sum()
     }
 }
 

@@ -20,6 +20,6 @@ impl RayScattering for Lambertian {
         scattered_ray.direction = (scattered_ray_target_point - hit_info.hit_point).normalize();
         scattered_ray.origin = hit_info.hit_point;
         *attentuation = self.albedo;
-        return true;
+        true
     }
 }

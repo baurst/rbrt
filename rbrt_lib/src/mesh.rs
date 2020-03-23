@@ -28,13 +28,13 @@ pub struct TriangleMesh {
 pub fn determine_num_vector_lanes() -> usize {
     if is_x86_feature_detected!("avx") {
         println!("AVX capability detected!");
-        return 8;
+        8
     } else if is_x86_feature_detected!("sse") {
         println!("SSE capability detected!");
-        return 4;
+        4
     } else {
         println!("Neither SSE nor AVX capability detected - using slower scalar fallback!");
-        return 0;
+        0
     }
 }
 
@@ -64,14 +64,14 @@ impl TriangleMesh {
         let (vertices, edges, normals, is_padding_triangle) =
             convert_to_soa_mesh(&mut pre_vertices, &mut pre_edges, &mut pre_normals);
 
-        return TriangleMesh {
-            is_padding_triangle: is_padding_triangle,
-            vertices: vertices,
-            normals: normals,
-            edges: edges,
+        TriangleMesh {
+            is_padding_triangle,
+            vertices,
+            normals,
+            edges,
             bbox: BoundingBox::new(lower_bound, upper_bound),
-            material: material,
-        };
+            material,
+        }
     }
 }
 
@@ -116,7 +116,7 @@ pub fn load_mesh_vertices_from_file(
         model_vertices.len(),
         filepath
     );
-    return model_vertices;
+    model_vertices
 }
 
 /// Loads mesh from obj file, scales and translates it
@@ -126,8 +126,8 @@ pub fn load_mesh_from_file(
     rotation: Vec3,
     scale: f32,
     albedo: Vec3,
-) -> Vec<Box<BasicTriangle>> {
-    let mut model_elements: Vec<Box<BasicTriangle>> = Vec::new();
+) -> Vec<BasicTriangle> {
+    let mut model_elements: Vec<BasicTriangle> = Vec::new();
 
     let loaded_mesh = tobj::load_obj(&Path::new(filepath));
     assert!(loaded_mesh.is_ok());
@@ -149,14 +149,14 @@ pub fn load_mesh_from_file(
                     mesh.positions[z_idx as usize] as f32 * scale,
                 );
             }
-            let tri = Box::new(BasicTriangle::new(
+            let tri = BasicTriangle::new(
                 [
                     triangle_vertices[0].rotate_point(rotation) + translation,
                     triangle_vertices[1].rotate_point(rotation) + translation,
                     triangle_vertices[2].rotate_point(rotation) + translation,
                 ],
-                Box::new(Lambertian { albedo: albedo }),
-            ));
+                Box::new(Lambertian { albedo }),
+            );
             model_elements.push(tri);
         }
     }
@@ -165,7 +165,7 @@ pub fn load_mesh_from_file(
         model_elements.len(),
         filepath
     );
-    return model_elements;
+    model_elements
 }
 
 pub fn convert_to_soa_mesh(
@@ -225,14 +225,14 @@ pub fn convert_to_soa_mesh(
         normals[2].push(normal.z);
     }
 
-    return (vertices, edges, normals, is_padding_triangle);
+    (vertices, edges, normals, is_padding_triangle)
 }
 
 pub fn do_intersection_soa(
     ray: &Ray,
     vertices: &[[std::vec::Vec<f32>; 3]; 3],
     edges: &[[std::vec::Vec<f32>; 3]; 2],
-    is_padding_triangle: &Vec<bool>,
+    is_padding_triangle: &[bool],
     min_dist: f32,
     max_dist: f32,
 ) -> (Option<f32>, Option<usize>) {
@@ -296,21 +296,21 @@ impl Intersectable for TriangleMesh {
             let dist_from_ray_orig = (ray.origin - hit_point).length();
             if dist_from_ray_orig > min_dist && dist_from_ray_orig < max_dist {
                 let hit_idx = hit_idx_op.unwrap();
-                return Some(HitInformation {
-                    hit_point: hit_point,
+                Some(HitInformation {
+                    hit_point,
                     hit_normal: Vec3::new(
                         self.normals[0][hit_idx],
                         self.normals[1][hit_idx],
                         self.normals[2][hit_idx],
                     ),
                     hit_material: &*self.material,
-                    dist_from_ray_orig: dist_from_ray_orig,
-                });
+                    dist_from_ray_orig,
+                })
             } else {
-                return None;
+                None
             }
         } else {
-            return None;
+            None
         }
     }
 }

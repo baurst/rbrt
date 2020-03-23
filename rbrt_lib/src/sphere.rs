@@ -37,7 +37,7 @@ impl Intersectable for Sphere {
         };
 
         if num_hits == 0 {
-            return None;
+            None
         } else {
             let mut ray_param = (-b - sol.sqrt()) / (2.0 * a);
             if num_hits == 2 && ray_param < 0.0 {
@@ -51,16 +51,16 @@ impl Intersectable for Sphere {
             let dist_from_ray_orig = (ray.origin - hit_point).length();
 
             if dist_from_ray_orig < min_dist || dist_from_ray_orig > max_dist {
-                return None;
+                None
             } else {
                 let hit_normal = hit_point - self.center;
                 let hit_info = HitInformation {
-                    hit_normal: hit_normal,
-                    hit_point: hit_point,
+                    hit_normal,
+                    hit_point,
                     hit_material: &*self.material,
-                    dist_from_ray_orig: dist_from_ray_orig,
+                    dist_from_ray_orig,
                 };
-                return Some(hit_info);
+                Some(hit_info)
             }
         }
     }

@@ -21,11 +21,6 @@ impl RayScattering for Metal {
             (scattered_ray_target + self.roughness * random_point_in_unit_sphere()).normalize();
         scattered_ray.origin = hit_info.hit_point;
         *attentuation = self.albedo;
-        let reflect = scattered_ray.direction.dot(&hit_info.hit_normal) > 0.0;
-        if reflect {
-            return true;
-        } else {
-            return false;
-        }
+        scattered_ray.direction.dot(&hit_info.hit_normal) > 0.0
     }
 }

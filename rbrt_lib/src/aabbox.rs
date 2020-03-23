@@ -9,19 +9,19 @@ pub struct BoundingBox {
 
 /// just for better readabilty
 pub fn max(a: f32, b: f32) -> f32 {
-    return a.max(b);
+    a.max(b)
 }
 
 pub fn min(a: f32, b: f32) -> f32 {
-    return a.min(b);
+    a.min(b)
 }
 
 impl BoundingBox {
     pub fn new(lower_bound: Vec3, upper_bound: Vec3) -> BoundingBox {
-        return BoundingBox {
-            lower_bound: lower_bound,
-            upper_bound: upper_bound,
-        };
+        BoundingBox {
+            lower_bound,
+            upper_bound,
+        }
     }
     /// for explanation see https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection
     /// see also https://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms
@@ -54,12 +54,12 @@ impl BoundingBox {
         if t_min > t_max {
             return false;
         }
-        return true;
+        true
     }
 }
 
 /// computes the axis aligned bounding box extents of triangles
-pub fn compute_min_max_3d(triangle_mesh: &Vec<[Vec3; 3]>) -> (Vec3, Vec3) {
+pub fn compute_min_max_3d(triangle_mesh: &[[Vec3; 3]]) -> (Vec3, Vec3) {
     let mut lower_bound_tmp = Vec3::new(std::f32::MAX, std::f32::MAX, std::f32::MAX);
     let mut upper_bound_tmp = Vec3::new(-std::f32::MAX, -std::f32::MAX, -std::f32::MAX);
     for tri in triangle_mesh {

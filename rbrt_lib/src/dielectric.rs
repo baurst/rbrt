@@ -57,13 +57,13 @@ impl RayScattering for Dielectric {
                 direction: refracted_ray_dir,
             };
         }
-        return true;
+        true
     }
 }
 
 pub fn schlick(cosine: f32, ref_index: f32) -> f32 {
     let r0 = ((1.0 - ref_index) / (1.0 + ref_index)).powi(2);
-    return r0 + (1.0 - r0) * (1.0 - cosine).powi(5);
+    r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
 }
 
 pub fn refract(
@@ -82,7 +82,7 @@ pub fn refract(
             ni_over_nt * (view_unit - normal_unit * cos_theta) - discr.sqrt() * normal_unit;
         return true;
     }
-    return false;
+    false
 }
 
 #[cfg(test)]

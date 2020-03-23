@@ -1,5 +1,7 @@
 use std::arch::x86_64::*;
 
+/// # Safety
+/// requires sse
 /// compute the dot for four vectors at once
 /// i.e.
 /// a_x contains all x components of the 4 a vectors
@@ -16,10 +18,10 @@ pub unsafe fn sse_dot_product(
     let a_x = _mm_mul_ps(a_x, b_x);
     let a_y = _mm_mul_ps(a_y, b_y);
     let a_z = _mm_mul_ps(a_z, b_z);
-    let sum = _mm_add_ps(_mm_add_ps(a_x, a_y), a_z);
-    return sum;
+    _mm_add_ps(_mm_add_ps(a_x, a_y), a_z)
 }
-
+/// # Safety
+/// requires sse
 /// compute the cross product of four vectors at once
 /// i.e.
 /// a_x contains all x components of the 4 a vectors
@@ -38,7 +40,7 @@ pub unsafe fn sse_cross_product(
     let c_y = _mm_sub_ps(_mm_mul_ps(a_z, b_x), _mm_mul_ps(a_x, b_z));
     let c_z = _mm_sub_ps(_mm_mul_ps(a_x, b_y), _mm_mul_ps(a_y, b_x));
 
-    return (c_x, c_y, c_z);
+    (c_x, c_y, c_z)
 }
 
 #[cfg(test)]

@@ -44,20 +44,20 @@ impl Camera {
         let vert_fov_rad = 2.0 * (2.0 * focal_len_mm / img_height_mm as f32).atan();
 
         Camera {
-            hor_fov_rad: hor_fov_rad,
-            img_width_pix: img_width_pix,
-            img_width_mm: img_width_mm,
-            vert_fov_rad: vert_fov_rad,
-            img_height_pix: img_height_pix,
-            img_height_mm: img_height_mm,
-            position: position,
-            focal_len_mm: focal_len_mm,
-            up: up,
-            right: right,
-            look_at: look_at,
-            img_center_point: img_center_point,
-            mm_per_pix_hor: mm_per_pix_hor,
-            mm_per_pix_vert: mm_per_pix_vert,
+            hor_fov_rad,
+            img_width_pix,
+            img_width_mm,
+            vert_fov_rad,
+            img_height_pix,
+            img_height_mm,
+            position,
+            focal_len_mm,
+            up,
+            right,
+            look_at,
+            img_center_point,
+            mm_per_pix_hor,
+            mm_per_pix_vert,
         }
     }
 
@@ -75,10 +75,9 @@ impl Camera {
             - 0.001 * img_row_center_offset_mm * self.up;
         let ray_direction = (ray_target_in_img_plane - self.position).normalize();
 
-        let ray = Ray {
+        Ray {
             origin: self.position,
             direction: ray_direction,
-        };
-        return ray;
+        }
     }
 }

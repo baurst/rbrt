@@ -19,9 +19,9 @@ pub struct BasicTriangle {
 impl BasicTriangle {
     pub fn new(corners: [Vec3; 3], material: Box<dyn RayScattering + Sync>) -> BasicTriangle {
         BasicTriangle {
-            corners: corners,
+            corners,
             normal: get_triangle_normal(&corners),
-            material: material,
+            material,
             edges: [corners[1] - corners[0], corners[2] - corners[0]],
         }
     }
@@ -30,15 +30,14 @@ impl BasicTriangle {
 pub fn get_triangle_normal(corners: &[Vec3; 3]) -> Vec3 {
     let edge1 = corners[1] - corners[0];
     let edge2 = corners[2] - corners[0];
-    let normal = edge1.cross_product(&edge2).normalize();
-    return normal;
+    edge1.cross_product(&edge2).normalize()
 }
 
 pub fn triangle_soa_intersect_with_ray(
     ray: &Ray,
     vertices: &[[Vec<f32>; 3]; 3],
     edges: &[[Vec<f32>; 3]; 2],
-    is_padding_triangle: &Vec<bool>,
+    is_padding_triangle: &[bool],
     min_dist: f32,
     max_dist: f32,
 ) -> (Option<f32>, Option<usize>) {
@@ -72,20 +71,17 @@ pub fn triangle_soa_intersect_with_ray(
         }
         // At this stage we can compute t to find out where the intersection point is on the line.
         let t = f * edge_b.dot(&q);
-        if t > eps
-        // ray intersection
-        {
-            if t < min_param && !is_padding_triangle[i] {
-                min_param = t;
-                min_idx = i;
-            }
+        if t > eps && t < min_param && !is_padding_triangle[i] {
+            // ray intersection
+            min_param = t;
+            min_idx = i;
         }
     }
 
     if min_param > eps && min_param < max_dist {
-        return (Some(min_param), Some(min_idx));
+        (Some(min_param), Some(min_idx))
     } else {
-        return (None, None);
+        (None, None)
     }
 }
 
@@ -126,14 +122,16 @@ pub fn basic_triangle_intersect_w_ray(
             return Some(t);
         }
     }
-    return None;
+    None
 }
 
+/// # Safety
+/// requires avx
 pub unsafe fn triangle_soa_avx_intersect_with_ray(
     ray: &Ray,
     vertices: &[[Vec<f32>; 3]; 3],
     edges: &[[Vec<f32>; 3]; 2],
-    is_padding_triangle: &Vec<bool>,
+    is_padding_triangle: &[bool],
     min_dist: f32,
     _max_dist: f32,
 ) -> (Option<f32>, Option<usize>) {
@@ -257,14 +255,16 @@ pub unsafe fn triangle_soa_avx_intersect_with_ray(
         ray_params.extend_from_slice(&t_unpacked);
     }
 
-    return find_smallest_element_bigger_than_eps(&ray_params, is_padding_triangle, eps_f32);
+    find_smallest_element_bigger_than_eps(&ray_params, is_padding_triangle, eps_f32)
 }
 
+/// # Safety
+/// requires sse
 pub unsafe fn triangle_soa_sse_intersect_with_ray(
     ray: &Ray,
     vertices: &[[Vec<f32>; 3]; 3],
     edges: &[[Vec<f32>; 3]; 2],
-    is_padding_triangle: &Vec<bool>,
+    is_padding_triangle: &[bool],
     min_dist: f32,
     _max_dist: f32,
 ) -> (Option<f32>, Option<usize>) {
@@ -318,7 +318,6 @@ pub unsafe fn triangle_soa_sse_intersect_with_ray(
 
         // let a = edges[0].dot(&h);
         let a_sum = sse_dot_product(edge_ax, edge_ay, edge_az, h_x, h_y, h_z);
-
         // condition 1: -eps < a
         // &&
         // condition 2:  a < eps
@@ -385,12 +384,12 @@ pub unsafe fn triangle_soa_sse_intersect_with_ray(
         ray_params.extend_from_slice(&t_unpacked);
     }
 
-    return find_smallest_element_bigger_than_eps(&ray_params, is_padding_triangle, eps_f32);
+    find_smallest_element_bigger_than_eps(&ray_params, is_padding_triangle, eps_f32)
 }
 
 pub fn find_smallest_element_bigger_than_eps(
-    ray_params: &Vec<f32>,
-    is_padding_triangle: &Vec<bool>,
+    ray_params: &[f32],
+    is_padding_triangle: &[bool],
     eps: f32,
 ) -> (Option<f32>, Option<usize>) {
     let mut min_idx = 0;
@@ -402,9 +401,9 @@ pub fn find_smallest_element_bigger_than_eps(
         }
     }
     if min_param > eps && min_param < 100000.0 {
-        return (Some(min_param), Some(min_idx));
+        (Some(min_param), Some(min_idx))
     } else {
-        return (None, None);
+        (None, None)
     }
 }
 
@@ -419,25 +418,23 @@ impl Intersectable for BasicTriangle {
         let ray_param_op =
             basic_triangle_intersect_w_ray(&ray, &self.corners, &self.edges, min_dist, max_dist);
 
-        if ray_param_op.is_some()
-        // ray intersection
-        {
-            let t = ray_param_op.unwrap();
-            let hit_point = ray.point_at(t);
-            let dist_from_ray_orig = (ray.origin - hit_point).length();
-            if dist_from_ray_orig < min_dist || dist_from_ray_orig > max_dist {
-                return None;
-            } else {
-                return Some(HitInformation {
-                    hit_point: hit_point,
-                    hit_normal: self.normal,
-                    hit_material: &*self.material,
-                    dist_from_ray_orig: dist_from_ray_orig,
-                });
+        match ray_param_op {
+            Some(t) => {
+                let hit_point = ray.point_at(t);
+                let dist_from_ray_orig = (ray.origin - hit_point).length();
+                if dist_from_ray_orig < min_dist || dist_from_ray_orig > max_dist {
+                    None
+                } else {
+                    Some(HitInformation {
+                        hit_point,
+                        hit_normal: self.normal,
+                        hit_material: &*self.material,
+                        dist_from_ray_orig,
+                    })
+                }
             }
+            None => None,
         }
-
-        return None;
     }
 }
 

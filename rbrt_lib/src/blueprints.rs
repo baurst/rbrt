@@ -70,7 +70,7 @@ fn create_material_from_description(
     println!(
         "Cannot figure out material_type from {}, material_type must be one of metal, lambertian or dielectric!", mat_type
     );
-    return None;
+    None
 }
 
 pub fn load_blueprints_from_yaml_file(filepath: &str) -> SceneBlueprint {
@@ -82,15 +82,13 @@ pub fn load_blueprints_from_yaml_file(filepath: &str) -> SceneBlueprint {
 
     let scene_bp = serde_yaml::from_reader(f);
 
-    let scene_bp = match scene_bp {
+    match scene_bp {
         Ok(bp) => bp,
         Err(error) => panic!(
             "Unable to parse content of file {:?} to scene blueprint: {:?}",
             filepath, error
         ),
-    };
-
-    return scene_bp;
+    }
 }
 
 fn parse_mesh_bp(mesh_bp: TriangleMeshBlueprint) -> Option<TriangleMesh> {
@@ -99,18 +97,18 @@ fn parse_mesh_bp(mesh_bp: TriangleMeshBlueprint) -> Option<TriangleMesh> {
         mesh_bp.albedo,
         mesh_bp.material_param,
     );
-    if mat_box_op.is_some() {
-        let tri_mesh = Some(TriangleMesh::new(
+    match mat_box_op {
+        Some(mat_box) => Some(TriangleMesh::new(
             &mesh_bp.obj_filepath,
             mesh_bp.translation,
             mesh_bp.rotation_rad,
             mesh_bp.scale,
-            mat_box_op.unwrap(),
-        ));
-        return tri_mesh;
-    } else {
-        println!("Failed to parse material info provided with mesh!");
-        return None;
+            mat_box,
+        )),
+        None => {
+            println!("Failed to parse material info provided with mesh!");
+            None
+        }
     }
 }
 
@@ -121,14 +119,13 @@ fn parse_sphere_bp(sphere_bp: SphereBlueprint) -> Option<Sphere> {
         sphere_bp.material_param,
     );
 
-    if mat_box_op.is_some() {
-        return Some(Sphere {
+    match mat_box_op {
+        Some(mat_box) => Some(Sphere {
             center: sphere_bp.center,
             radius: sphere_bp.radius,
-            material: mat_box_op.unwrap(),
-        });
-    } else {
-        return None;
+            material: mat_box,
+        }),
+        None => None,
     }
 }
 
@@ -136,8 +133,8 @@ pub fn create_scene_from_scene_blueprint(scene_bp: SceneBlueprint) -> Scene {
     let mut loaded_meshes = vec![];
     for mesh_bp in scene_bp.mesh_blueprints {
         let tri_mesh_op = parse_mesh_bp(mesh_bp);
-        if tri_mesh_op.is_some() {
-            loaded_meshes.push(tri_mesh_op.unwrap());
+        if let Some(tri_mesh) = tri_mesh_op {
+            loaded_meshes.push(tri_mesh)
         }
     }
 
@@ -146,18 +143,18 @@ pub fn create_scene_from_scene_blueprint(scene_bp: SceneBlueprint) -> Scene {
     > = vec![];
     for sphere_bp in scene_bp.sphere_blueprints {
         let sphere_op = parse_sphere_bp(sphere_bp);
-        if sphere_op.is_some() {
-            scene_elements.push(Box::new(sphere_op.unwrap()));
+        if let Some(sphere) = sphere_op {
+            scene_elements.push(Box::new(sphere))
         }
     }
 
     let lights = vec![];
 
-    return Scene {
+    Scene {
         triangle_meshes: loaded_meshes,
         elements: scene_elements,
-        lights: lights,
-    };
+        lights,
+    }
 }
 
 #[cfg(test)]

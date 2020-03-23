@@ -26,14 +26,14 @@ pub fn random_point_in_unit_sphere() -> Vec3 {
                 rand::random::<f32>(),
             ) - Vec3::new(1.0, 1.0, 1.0);
     }
-    return point;
+    point
 }
 
 pub fn reflect(incoming_ray_dir: &Vec3, normal: &Vec3) -> Vec3 {
     let inc_ray_dir_unit = incoming_ray_dir.normalize();
     let normal_unit = normal.normalize();
     let reflected_dir = inc_ray_dir_unit - 2.0 * normal_unit * inc_ray_dir_unit.dot(&normal_unit);
-    return reflected_dir.normalize();
+    reflected_dir.normalize()
 }
 
 #[cfg(test)]

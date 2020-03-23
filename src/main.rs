@@ -87,8 +87,10 @@ fn main() {
 
     println!("Saving rendered image to {}", target_image_path);
 
-    img_buf.save(target_image_path).expect(&format!(
-        "Unable to save target img to {}! Maybe the directory does not exist?",
-        target_image_path
-    ));
+    img_buf.save(target_image_path).unwrap_or_else(|_| {
+        panic!(
+            "Unable to save target img to {}! Maybe the directory does not exist?",
+            target_image_path
+        )
+    });
 }

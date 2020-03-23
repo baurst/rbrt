@@ -46,27 +46,29 @@ pub fn colorize(ray: &Ray, scene: &Scene, bg_color: &Vec3, current_depth: u32) -
 
     let hit_opt = scene.hit(&ray, min_dist, max_dist);
 
-    if hit_opt.is_some() {
-        let closest_hit_info = hit_opt.unwrap();
-        let mut scattered_ray = Ray::zero();
-        let mut attentuation = Vec3::zero();
+    match hit_opt {
+        Some(closest_hit_info) => {
+            let mut scattered_ray = Ray::zero();
+            let mut attentuation = Vec3::zero();
 
-        if current_depth > 0
-            && closest_hit_info.hit_material.scatter(
-                ray,
-                &closest_hit_info,
-                &mut attentuation,
-                &mut scattered_ray,
-            )
-        {
-            return attentuation * colorize(&scattered_ray, scene, bg_color, current_depth - 1);
-        } else {
-            // ray was completely attentuated
-            return Vec3::zero();
+            if current_depth > 0
+                && closest_hit_info.hit_material.scatter(
+                    ray,
+                    &closest_hit_info,
+                    &mut attentuation,
+                    &mut scattered_ray,
+                )
+            {
+                attentuation * colorize(&scattered_ray, scene, bg_color, current_depth - 1)
+            } else {
+                // ray was completely attentuated
+                Vec3::zero()
+            }
         }
-    } else {
-        let t = 0.5 * (ray.direction.y + 1.0); // t=[0,1]
-        return t * Vec3::new(1.0, 1.0, 1.0) + (1.0 - t) * *bg_color;
+        None => {
+            let t = 0.5 * (ray.direction.y + 1.0); // t=[0,1]
+            t * Vec3::new(1.0, 1.0, 1.0) + (1.0 - t) * *bg_color
+        }
     }
 }
 
@@ -83,8 +85,6 @@ pub fn render_scene(
         .into_par_iter()
         .map(|col_idx| {
             let col: Vec<Vec3> = (0..cam.img_height_pix)
-                //.into_par_iter()
-                .into_iter()
                 .map(|row_idx| {
                     let bg_color = Vec3 {
                         x: 0.05,
@@ -120,5 +120,5 @@ pub fn render_scene(
         let b = (hdr_img[x as usize][y as usize].z.sqrt() * 256.0) as u8;
         *pixel = image::Rgb([r, g, b]);
     }
-    return imgbuf;
+    imgbuf
 }
