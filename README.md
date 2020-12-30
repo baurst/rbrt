@@ -1,7 +1,6 @@
 # Rust Based Ray Tracer
 
-[![Build Status](https://travis-ci.com/baurst/rbrt.svg?token=KGmoNyosUqTq92iqGZE9&branch=master)](https://travis-ci.com/baurst/rbrt)
-
+![Rust](https://github.com/baurst/rbrt/workflows/Rust/badge.svg)
 ![Demo](demo_imgs/header.png)
 
 ## Core Features
