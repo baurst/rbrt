@@ -40,8 +40,8 @@ impl Camera {
         let mm_per_pix_vert = img_height_mm / img_height_pix as f32;
 
         let img_center_point = position + focal_len_mm / 1000.0 * look_at.normalize();
-        let hor_fov_rad = 2.0 * (2.0 * focal_len_mm / img_width_mm as f32).atan();
-        let vert_fov_rad = 2.0 * (2.0 * focal_len_mm / img_height_mm as f32).atan();
+        let hor_fov_rad = 2.0 * (2.0 * focal_len_mm / img_width_mm).atan();
+        let vert_fov_rad = 2.0 * (2.0 * focal_len_mm / img_height_mm).atan();
 
         Camera {
             hor_fov_rad,

@@ -16,12 +16,12 @@ pub struct Scene {
 }
 
 impl Scene {
-    pub fn hit<'a>(&'a self, ray: &Ray, min_dist: f32, max_dist: f32) -> Option<HitInformation> {
+    pub fn hit(&self, ray: &Ray, min_dist: f32, max_dist: f32) -> Option<HitInformation> {
         let mut closest_hit_rec = None;
-        let mut closest_so_far = std::f32::MAX;
+        let mut closest_so_far = f32::MAX;
 
         for sphere in &self.elements {
-            let hit_info_op = sphere.intersect_with_ray(&ray, min_dist, max_dist);
+            let hit_info_op = sphere.intersect_with_ray(ray, min_dist, max_dist);
             if let Some(hit_rec) = hit_info_op {
                 if hit_rec.dist_from_ray_orig < closest_so_far {
                     closest_so_far = hit_rec.dist_from_ray_orig;
@@ -31,7 +31,7 @@ impl Scene {
         }
 
         for mesh in &self.triangle_meshes {
-            let hit_info_op = mesh.intersect_with_ray(&ray, min_dist, max_dist);
+            let hit_info_op = mesh.intersect_with_ray(ray, min_dist, max_dist);
             if let Some(hit_rec) = hit_info_op {
                 if hit_rec.dist_from_ray_orig < closest_so_far {
                     closest_so_far = hit_rec.dist_from_ray_orig;

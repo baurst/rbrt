@@ -60,11 +60,10 @@ impl BoundingBox {
 
 /// computes the axis aligned bounding box extents of triangles
 pub fn compute_min_max_3d(triangle_mesh: &[[Vec3; 3]]) -> (Vec3, Vec3) {
-    let mut lower_bound_tmp = Vec3::new(std::f32::MAX, std::f32::MAX, std::f32::MAX);
-    let mut upper_bound_tmp = Vec3::new(-std::f32::MAX, -std::f32::MAX, -std::f32::MAX);
+    let mut lower_bound_tmp = Vec3::new(f32::MAX, f32::MAX, f32::MAX);
+    let mut upper_bound_tmp = Vec3::new(-f32::MAX, -f32::MAX, -f32::MAX);
     for tri in triangle_mesh {
-        for idx in 0..3 {
-            let vertex = tri[idx];
+        for vertex in tri.iter().take(3) {
             if vertex.x < lower_bound_tmp.x {
                 lower_bound_tmp.x = vertex.x;
             }

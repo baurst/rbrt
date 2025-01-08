@@ -10,5 +10,5 @@ edition = "2018"
 
 [dependencies]
 rbrt_lib = {path = "rbrt_lib"}
-clap = "2"
-image = "0.12"
+clap = "4"
+image = "0.25"

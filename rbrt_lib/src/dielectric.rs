@@ -20,7 +20,6 @@ impl RayScattering for Dielectric {
         let outward_normal;
         let ni_over_nt;
         let cosine;
-        let reflect_prob;
         let a = incoming_ray
             .direction
             .normalize()
@@ -36,16 +35,16 @@ impl RayScattering for Dielectric {
         }
 
         let mut refracted_ray_dir = Vec3::zero();
-        if refract(
+        let reflect_prob = if refract(
             &incoming_ray.direction,
             &outward_normal,
             ni_over_nt,
             &mut refracted_ray_dir,
         ) {
-            reflect_prob = schlick(cosine, self.ref_idx);
+            schlick(cosine, self.ref_idx)
         } else {
-            reflect_prob = 1.0;
-        }
+            1.0
+        };
         if rand::random::<f32>() < reflect_prob {
             *scattered_ray = Ray {
                 origin: hit_info.hit_point,

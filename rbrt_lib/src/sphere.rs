@@ -17,8 +17,8 @@ impl Intersectable for Sphere {
     /// insert ray for p into sphere equation, then solve quadratic equation for t
     /// (o+td-c)(o+td-c)=r^2
     /// t1/2 = (-B +- sqrt(B^2 - 4AC))/(2A)
-    fn intersect_with_ray<'a>(
-        &'a self,
+    fn intersect_with_ray(
+        &self,
         ray: &Ray,
         min_dist: f32,
         max_dist: f32,

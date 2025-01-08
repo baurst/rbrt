@@ -44,7 +44,7 @@ pub fn colorize(ray: &Ray, scene: &Scene, bg_color: &Vec3, current_depth: u32) -
     let min_dist = 0.001;
     let max_dist = 2000.0;
 
-    let hit_opt = scene.hit(&ray, min_dist, max_dist);
+    let hit_opt = scene.hit(ray, min_dist, max_dist);
 
     match hit_opt {
         Some(closest_hit_info) => {

@@ -24,7 +24,7 @@ mesh_blueprints:
       x: 0.0
       y: 0.0
       z: 0.0
-    material_type: "metal"
+    material_type: "dielectric"
     material_param: 0.2
     albedo:
       x: 0.8

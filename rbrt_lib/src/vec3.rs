@@ -34,7 +34,6 @@ impl Add for Vec3 {
 }
 impl AddAssign for Vec3 {
     #[inline]
-
     fn add_assign(&mut self, other: Self) {
         *self = Self {
             x: self.x + other.x,
@@ -135,7 +134,7 @@ impl Vec3 {
     }
 
     /// rotate a point Z,X,Z
-    /// angles in radian     
+    /// angles in radian
     #[inline]
     pub fn rotate_point(&self, rot: Vec3) -> Vec3 {
         let s_x = rot.x.sin();

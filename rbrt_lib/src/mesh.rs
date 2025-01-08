@@ -2,10 +2,9 @@ extern crate tobj;
 use std::path::Path;
 
 use crate::aabbox::{compute_min_max_3d, BoundingBox};
-use crate::lambertian::Lambertian;
 use crate::triangle::{
     get_triangle_normal, triangle_soa_avx_intersect_with_ray, triangle_soa_intersect_with_ray,
-    triangle_soa_sse_intersect_with_ray, BasicTriangle,
+    triangle_soa_sse_intersect_with_ray,
 };
 use crate::vec3::Vec3;
 use crate::{HitInformation, Intersectable, Ray, RayScattering};
@@ -50,7 +49,7 @@ impl TriangleMesh {
 
         let mut pre_normals = vec![];
         for triangle_vertices in &pre_vertices {
-            pre_normals.push(get_triangle_normal(&triangle_vertices));
+            pre_normals.push(get_triangle_normal(triangle_vertices));
         }
 
         let mut pre_edges = vec![];
@@ -83,12 +82,14 @@ pub fn load_mesh_vertices_from_file(
     scale: f32,
 ) -> Vec<[Vec3; 3]> {
     let mut model_vertices: Vec<[Vec3; 3]> = Vec::new();
-
-    let loaded_mesh = tobj::load_obj(&Path::new(filepath));
+    let load_options = tobj::LoadOptions {
+        ..Default::default()
+    };
+    let loaded_mesh = tobj::load_obj(Path::new(filepath), &load_options);
     assert!(loaded_mesh.is_ok());
     let (models, _materials) = loaded_mesh.unwrap();
 
-    for (_i, m) in models.iter().enumerate() {
+    for m in models.iter() {
         let mesh = &m.mesh;
         assert!(mesh.positions.len() % 3 == 0);
         let mut triangle_vertices: Vec<Vec3> = vec![Vec3::zero(); 3];
@@ -99,9 +100,9 @@ pub fn load_mesh_vertices_from_file(
                 let z_idx = 3 * mesh.indices[3 * f + idx] + 2;
 
                 triangle_vertices[idx] = Vec3::new(
-                    mesh.positions[x_idx as usize] as f32 * scale,
-                    mesh.positions[y_idx as usize] as f32 * scale,
-                    mesh.positions[z_idx as usize] as f32 * scale,
+                    mesh.positions[x_idx as usize] * scale,
+                    mesh.positions[y_idx as usize] * scale,
+                    mesh.positions[z_idx as usize] * scale,
                 );
             }
             model_vertices.push([
@@ -117,55 +118,6 @@ pub fn load_mesh_vertices_from_file(
         filepath
     );
     model_vertices
-}
-
-/// Loads mesh from obj file, scales and translates it
-pub fn load_mesh_from_file(
-    filepath: &str,
-    translation: Vec3,
-    rotation: Vec3,
-    scale: f32,
-    albedo: Vec3,
-) -> Vec<BasicTriangle> {
-    let mut model_elements: Vec<BasicTriangle> = Vec::new();
-
-    let loaded_mesh = tobj::load_obj(&Path::new(filepath));
-    assert!(loaded_mesh.is_ok());
-    let (models, _materials) = loaded_mesh.unwrap();
-
-    for (_i, m) in models.iter().enumerate() {
-        let mesh = &m.mesh;
-        assert!(mesh.positions.len() % 3 == 0);
-        let mut triangle_vertices: Vec<Vec3> = vec![Vec3::zero(); 3];
-        for f in 0..mesh.indices.len() / 3 {
-            for idx in 0..3 {
-                let x_idx = 3 * mesh.indices[3 * f + idx];
-                let y_idx = 3 * mesh.indices[3 * f + idx] + 1;
-                let z_idx = 3 * mesh.indices[3 * f + idx] + 2;
-
-                triangle_vertices[idx] = Vec3::new(
-                    mesh.positions[x_idx as usize] as f32 * scale,
-                    mesh.positions[y_idx as usize] as f32 * scale,
-                    mesh.positions[z_idx as usize] as f32 * scale,
-                );
-            }
-            let tri = BasicTriangle::new(
-                [
-                    triangle_vertices[0].rotate_point(rotation) + translation,
-                    triangle_vertices[1].rotate_point(rotation) + translation,
-                    triangle_vertices[2].rotate_point(rotation) + translation,
-                ],
-                Box::new(Lambertian { albedo }),
-            );
-            model_elements.push(tri);
-        }
-    }
-    println!(
-        "Successfully loaded {} triangles from file {}!",
-        model_elements.len(),
-        filepath
-    );
-    model_elements
 }
 
 pub fn convert_to_soa_mesh(
@@ -239,7 +191,7 @@ pub fn do_intersection_soa(
     if is_x86_feature_detected!("avx") {
         unsafe {
             triangle_soa_avx_intersect_with_ray(
-                &ray,
+                ray,
                 vertices,
                 edges,
                 is_padding_triangle,
@@ -250,7 +202,7 @@ pub fn do_intersection_soa(
     } else if is_x86_feature_detected!("sse") {
         unsafe {
             triangle_soa_sse_intersect_with_ray(
-                &ray,
+                ray,
                 vertices,
                 edges,
                 is_padding_triangle,
@@ -260,7 +212,7 @@ pub fn do_intersection_soa(
         }
     } else {
         triangle_soa_intersect_with_ray(
-            &ray,
+            ray,
             vertices,
             edges,
             is_padding_triangle,
@@ -271,8 +223,8 @@ pub fn do_intersection_soa(
 }
 
 impl Intersectable for TriangleMesh {
-    fn intersect_with_ray<'a>(
-        &'a self,
+    fn intersect_with_ray(
+        &self,
         ray: &Ray,
         min_dist: f32,
         max_dist: f32,
@@ -282,7 +234,7 @@ impl Intersectable for TriangleMesh {
             return None;
         }
         let (hit_info_op, hit_idx_op) = do_intersection_soa(
-            &ray,
+            ray,
             &self.vertices,
             &self.edges,
             &self.is_padding_triangle,

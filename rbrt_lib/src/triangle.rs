@@ -46,7 +46,11 @@ pub fn triangle_soa_intersect_with_ray(
     let mut min_idx = 0;
     let mut min_param = 1000000.0;
 
-    for i in 0..vertices[0][0].len() {
+    for (i, is_pad) in is_padding_triangle
+        .iter()
+        .enumerate()
+        .take(vertices[0][0].len())
+    {
         let vertex_a = Vec3::new(vertices[0][0][i], vertices[0][1][i], vertices[0][2][i]);
 
         let edge_a = Vec3::new(edges[0][0][i], edges[0][1][i], edges[0][1][i]);
@@ -61,7 +65,7 @@ pub fn triangle_soa_intersect_with_ray(
         let f = 1.0 / a;
         let s = ray.origin - vertex_a;
         let u = f * s.dot(&h);
-        if u < 0.0 || u > 1.0 {
+        if !(0.0..=1.0).contains(&u) {
             continue;
         }
         let q = s.cross_product(&edge_a);
@@ -71,7 +75,7 @@ pub fn triangle_soa_intersect_with_ray(
         }
         // At this stage we can compute t to find out where the intersection point is on the line.
         let t = f * edge_b.dot(&q);
-        if t > eps && t < min_param && !is_padding_triangle[i] {
+        if t > eps && t < min_param && !is_pad {
             // ray intersection
             min_param = t;
             min_idx = i;
@@ -101,7 +105,7 @@ pub fn basic_triangle_intersect_w_ray(
     let f = 1.0 / a;
     let s = ray.origin - vertices[0];
     let u = f * s.dot(&h);
-    if u < 0.0 || u > 1.0 {
+    if !(0.0..=1.0).contains(&u) {
         return None;
     }
     let q = s.cross_product(&edges[0]);
@@ -135,8 +139,7 @@ pub unsafe fn triangle_soa_avx_intersect_with_ray(
     min_dist: f32,
     _max_dist: f32,
 ) -> (Option<f32>, Option<usize>) {
-    let mut ray_params: Vec<f32> = vec![];
-    ray_params.reserve(vertices[0][0].len());
+    let mut ray_params: Vec<f32> = Vec::with_capacity(vertices[0][0].len());
     let eps_f32 = min_dist;
 
     let eps = _mm256_set1_ps(eps_f32);
@@ -268,8 +271,7 @@ pub unsafe fn triangle_soa_sse_intersect_with_ray(
     min_dist: f32,
     _max_dist: f32,
 ) -> (Option<f32>, Option<usize>) {
-    let mut ray_params: Vec<f32> = vec![];
-    ray_params.reserve(vertices[0][0].len());
+    let mut ray_params: Vec<f32> = Vec::with_capacity(vertices[0][0].len());
     let eps_f32 = min_dist;
     let eps = _mm_set1_ps(eps_f32);
     let eps_frac = _mm_set1_ps(1.0 / eps_f32);
@@ -409,14 +411,14 @@ pub fn find_smallest_element_bigger_than_eps(
 
 impl Intersectable for BasicTriangle {
     /// see https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-    fn intersect_with_ray<'a>(
-        &'a self,
+    fn intersect_with_ray(
+        &self,
         ray: &Ray,
         min_dist: f32,
         max_dist: f32,
     ) -> Option<HitInformation> {
         let ray_param_op =
-            basic_triangle_intersect_w_ray(&ray, &self.corners, &self.edges, min_dist, max_dist);
+            basic_triangle_intersect_w_ray(ray, &self.corners, &self.edges, min_dist, max_dist);
 
         match ray_param_op {
             Some(t) => {
